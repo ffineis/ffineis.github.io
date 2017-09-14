@@ -9,7 +9,7 @@
 title: Data Science with Big Dillinger
 #email: frank.fineis@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Thoughts about Data Science, R and Python tutorials, and life as a Statistics graduate student at Northwestern
+  Thoughts about Data Science, R and Python tutorials, and life as a graduate student in statistics at Northwestern
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://yourdomain.com" # the base hostname & protocol for your site
 twitter_username: bigdillinger
