@@ -1,4 +1,4 @@
-source 'https://rubygems.org'
-gem "jekyll-theme-slate", group: :jekyll_plugins
+source "https://rubygems.org"
+gem "jekyll-theme-slate"
 gem "kramdown"
-gem "github-pages"
+gem "github-pages", group: :jekyll_plugins
