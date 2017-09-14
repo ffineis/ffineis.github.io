@@ -1,0 +1,8 @@
+0000000000000000000000000000000000000000 51d54128064977b8c081a627f6b20ce69e1c979a Frank Fineis <frank.fineis@uptake.com> 1454975705 -0600	commit (initial): initial push of mkdocs
+51d54128064977b8c081a627f6b20ce69e1c979a a732938a6ab3024b010534036e370727e01f85c3 Frank Fineis <frank.fineis@uptake.com> 1454975985 -0600	commit: mkdocs build working?
+a732938a6ab3024b010534036e370727e01f85c3 f73616b8be9e9f071f4a038ed6a5d37ea72dbbc0 Frank Fineis <frank.fineis@uptake.com> 1454976079 -0600	commit: mkdocs site working?
+f73616b8be9e9f071f4a038ed6a5d37ea72dbbc0 0ee98d035b42b2a8df76351d7811b210c944c888 Frank Fineis <frank.fineis@uptake.com> 1454976147 -0600	commit: scrapping mkdocs
+0ee98d035b42b2a8df76351d7811b210c944c888 42a3791569aae8fa68ec6134d5a0d914556d8507 Frank Fineis <frank.fineis@uptake.com> 1454976246 -0600	commit: mkdocs files deleted, going with Jekyll
+42a3791569aae8fa68ec6134d5a0d914556d8507 a847103f35669fdc53064d0f2c0a00880f4bef0a Frank Fineis <frank.fineis@uptake.com> 1454976461 -0600	checkout: moving from master to gh-pages
+a847103f35669fdc53064d0f2c0a00880f4bef0a 42a3791569aae8fa68ec6134d5a0d914556d8507 Frank Fineis <frank.fineis@uptake.com> 1454976509 -0600	checkout: moving from gh-pages to master
+42a3791569aae8fa68ec6134d5a0d914556d8507 42a3791569aae8fa68ec6134d5a0d914556d8507 Frank Fineis <frank.fineis@uptake.com> 1454976542 -0600	checkout: moving from master to gh-pages

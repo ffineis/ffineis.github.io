@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Example Case Interview: the Kaggle Competition. (Part 2)</title>
+  <meta name="description" content="After finishing Part 1 of this tutorial we have our data features - recall that we saved the TF-IDF transformed text data from the names and description/capt...">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="http://localhost:4000/tutorials/data/2016/03/08/kaggle-pt2.html">
+  <link rel="alternate" type="application/rss+xml" title="Data Science with Big Dillinger" href="http://localhost:4000/feed.xml">
+
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Data Science with Big Dillinger</a>
+
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">about</a>
+          
+        
+          
+        
+          
+          <a class="page-link" href="/blog/">blog</a>
+          
+        
+          
+          <a class="page-link" href="/tutorials/">tutorials</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">Example Case Interview: the Kaggle Competition. (Part 2)</h1>
+    <p class="post-meta"><time datetime="2016-03-08T09:28:13-06:00" itemprop="datePublished">Mar 8, 2016</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <p>After finishing <a href="http://frankfineis.github.io/tutorials/2016/02/17/kaggle-pt1.html">Part 1</a> of this tutorial we have our data features - recall that we saved the TF-IDF transformed text data from the <em>names</em> and <em>description/caption</em> fields and country names we got from the Geonames API in the <code class="highlighter-rouge">./data</code> directory - we’ll assemble our training and test data matrices. After that, we’ll train an <code class="highlighter-rouge">xgboost</code> model comprised of trees and (briefly) tune a few hyperparameters.</p>
+
+<p>It’s important to note that there are two different ways to train and validate a model: we can use the functions supplied to us in the <code class="highlighter-rouge">xgboost</code> package directly (e.g. <code class="highlighter-rouge">xgb.train</code> or <code class="highlighter-rouge">xgb.cv</code>), OR, we can use the <code class="highlighter-rouge">caret</code> package. I’ll illustrate both, but I’ll use <code class="highlighter-rouge">caret</code> to tune the model that will be used for making predictions on <code class="highlighter-rouge">test.csv</code>.</p>
+
+<p>Go ahead and navigate to the <a href="https://github.com/fineiskid/photo_kaggle/blob/master/scripts/run_classifier.R">run_classifier.R</a> script to follow along!</p>
+
+<p><br /></p>
+
+<h3 id="1-the-assemble_data-function">(1) The <code class="highlighter-rouge">assemble_data</code> function</h3>
+
+<p>This function will load and format either your training or test data (from <code class="highlighter-rouge">train.csv</code> or <code class="highlighter-rouge">test.csv</code> accordingly). Namely, this data pre-processing function will do the following:</p>
+
+<ul>
+  <li><em>Assembling training set</em>: we change the <em>good</em> vector in <code class="highlighter-rouge">train.csv</code> to zeros and ones for use with Xgboost’s function model training function, <code class="highlighter-rouge">xgboost.train</code>, append each of the the TF-IDF features from the <em>name</em> and <em>description/caption</em> text columns, append a <a href="https://www.quora.com/What-is-one-hot-encoding-and-when-is-it-used-in-data-science">one-hot encoding</a> of the country names data, remove rows whose countries are missing (there are only about 150 of these cases), and return the training data and target vector with R’s <code class="highlighter-rouge">as.matrix</code> function. One-hot encoding of the country names will make one binary vector for each country name, and that vector will have a 1 if that row’s photo album came from the corresponding country. This is accomplished with the line</li>
+</ul>
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="w"> </span><span class="n">country_one_hot</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">model.matrix</span><span class="p">(</span><span class="o">~</span><span class="w"> </span><span class="m">0</span><span class="o">+</span><span class="n">country</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">country</span><span class="p">)</span><span class="w"> </span></code></pre></figure>
+
+<ul>
+  <li><em>Assembling the test set</em>: Again, we append text and one-hot encoded country features, only now we can ignore the target vector because we’re obviously missing <em>good</em>/<em>bad</em> photo albumn classifications. Also, instead of removing rows with missing country names, we’ll impute the most common country name (the USA) because we don’t have the luxury of just excluding albums from the test set. This imputation happens on the line</li>
+</ul>
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="w"> </span><span class="n">country</span><span class="o">$</span><span class="n">country</span><span class="p">[</span><span class="n">which</span><span class="p">(</span><span class="nf">is.na</span><span class="p">(</span><span class="n">country</span><span class="p">))]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">names</span><span class="p">(</span><span class="n">which.max</span><span class="p">(</span><span class="n">table</span><span class="p">(</span><span class="n">country</span><span class="p">)))</span><span class="w"> </span></code></pre></figure>
+
+<p><br />
+Once you’re familiar with the <code class="highlighter-rouge">assemble_data</code> function, notice that the lines immediately after defining <code class="highlighter-rouge">assemble_data</code> are calling that function to gather our training set and training target vector:</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">train_data</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">assemble_data</span><span class="p">()</span><span class="w">
+</span><span class="n">train</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train_data</span><span class="o">$</span><span class="n">data</span><span class="p">;</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train_data</span><span class="o">$</span><span class="n">y</span></code></pre></figure>
+
+<p><br /></p>
+
+<h3 id="2a-train-a-model-with-randomly-chosen-parameters-optional">(2.a) Train a model with randomly chosen parameters (optional)</h3>
+
+<p>If you want to use the model training, validation, and prediction functions supplied in the Xgboost package, that’s great, just be aware that you should supply each of <code class="highlighter-rouge">xgb.train</code>, <code class="highlighter-rouge">xgb.cv</code>, and <code class="highlighter-rouge">xgb::predict</code> with special data structures created with <code class="highlighter-rouge">xgb.DMatrix</code> instead of regular old matrices or R data.frames. First, we split up the <code class="highlighter-rouge">train</code> data into a training set and a validation set. I know, it’s confusing terminology - we’re taking 80% of the training data and calling <em>this</em> the training set and the remaining 20% the <em>validation</em> set. Anyway, the next chunk of code will fit a xgboosted tree model with a set of hyperparameters I pulled out of nowhere. Note that by using the <code class="highlighter-rouge">watchlist</code> setting, the training and validation set performance will print to the screen each time a new one of the <code class="highlighter-rouge">nround</code> small trees is appended to the aggregate model, but I’m saving this output to a text file via R’s <code class="highlighter-rouge">sink</code> function. Finally, we can estimate our accuracy on <code class="highlighter-rouge">test.csv</code> by using our prediction error on the validation set as a proxy:</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">trainIndex</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">as.vector</span><span class="p">(</span><span class="n">caret</span><span class="o">::</span><span class="n">createDataPartition</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">,</span><span class="w">
+                                         </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0.8</span><span class="p">,</span><span class="w"> </span><span class="c1">#fraction of training data kept as 'training' data
+</span><span class="w">                                         </span><span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">))</span><span class="w">
+
+</span><span class="c1">#hyperparameters
+</span><span class="n">max.depth</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">8</span><span class="w"> </span><span class="c1">#How deep each weak learner (small tree) can get. Will control overfitting.
+</span><span class="n">eta</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">0.5</span><span class="w"> </span><span class="c1">#eta is the learning rate, which also has to do with regularization. 1 -&gt;&gt; no regularization. 0 &lt; eta &lt;= 1.
+</span><span class="n">nround</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">150</span><span class="w"> </span><span class="c1">#The number of passes over training data. This is the number of trees we're ensembling.
+</span><span class="w">
+</span><span class="n">train.DMat</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">xgb.DMatrix</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">[</span><span class="n">trainIndex</span><span class="p">,</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">[</span><span class="n">trainIndex</span><span class="p">])</span><span class="w">
+
+</span><span class="n">valid.DMat</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">xgb.DMatrix</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">,</span><span class="w"> </span><span class="p">],</span><span class="w"> </span><span class="n">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">])</span><span class="w">
+
+</span><span class="c1">#Fit boosted model with our random parameters. Save output that would otherwise print to console.
+</span><span class="n">sink</span><span class="p">(</span><span class="s2">"./data/watchlist_output.txt"</span><span class="p">,</span><span class="w"> </span><span class="n">append</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span><span class="n">bst</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">xgb.train</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train.DMat</span><span class="p">,</span><span class="w">
+                </span><span class="n">watchlist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">train</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train.DMat</span><span class="p">,</span><span class="w"> </span><span class="n">validation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">valid.DMat</span><span class="p">),</span><span class="w">
+                </span><span class="n">max.depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">max.depth</span><span class="p">,</span><span class="w">
+                </span><span class="n">eta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">eta</span><span class="p">,</span><span class="w"> </span><span class="n">nthread</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">4</span><span class="p">,</span><span class="w">
+                </span><span class="n">nround</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">nround</span><span class="p">,</span><span class="w">
+                </span><span class="n">objective</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"binary:logistic"</span><span class="p">,</span><span class="w">
+                </span><span class="n">eval_metric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"logloss"</span><span class="p">)</span><span class="w">
+</span><span class="n">sink</span><span class="p">()</span><span class="w">
+
+</span><span class="n">valid.preds</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">predict</span><span class="p">(</span><span class="n">bst</span><span class="p">,</span><span class="w"> </span><span class="n">valid.DMat</span><span class="p">)</span><span class="w"> </span><span class="c1">#Xgboost::predict returns class probabilities, not class labels!
+</span><span class="n">theta</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">0.5</span><span class="w">
+</span><span class="n">valid.class_preds</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">valid.preds</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">theta</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w">
+</span><span class="n">valid.accuracy</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">sum</span><span class="p">(</span><span class="nf">as.numeric</span><span class="p">(</span><span class="n">valid.class_preds</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">]))</span><span class="o">/</span><span class="nf">length</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">])</span><span class="w"> </span><span class="c1">#~78% valid accuracy
+</span><span class="n">print</span><span class="p">(</span><span class="n">sprintf</span><span class="p">(</span><span class="s2">"Accuracy on validation set: %f"</span><span class="p">,</span><span class="w"> </span><span class="n">valid.accuracy</span><span class="p">))</span></code></pre></figure>
+
+<p>Before moving on, one cool feature of boosted tree models is that we can get <strong>variable importances</strong> - a variable’s importance to the overall model is an average of the improvement in accuracy gained from all of the small trees every time that feature was used to split up a node in a tree. Viewing the variable importances might help to verify that your model makes sense, and it wouldn’t hurt to include it in a code/case interview to demonstrate that you can put words behind the model you’ve built.</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">importance_matrix</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">xgb.importance</span><span class="p">(</span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">bst</span><span class="p">,</span><span class="w"> </span><span class="n">feature_names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">colnames</span><span class="p">(</span><span class="n">train</span><span class="p">))</span><span class="w">
+</span><span class="n">print</span><span class="p">(</span><span class="n">importance_matrix</span><span class="p">)</span><span class="w">
+</span><span class="n">barplot</span><span class="p">(</span><span class="n">importance_matrix</span><span class="o">$</span><span class="n">Gain</span><span class="p">[</span><span class="m">6</span><span class="o">:</span><span class="m">1</span><span class="p">],</span><span class="w">
+        </span><span class="n">horiz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">T</span><span class="p">,</span><span class="w">
+        </span><span class="n">names.arg</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">importance_matrix</span><span class="o">$</span><span class="n">Feature</span><span class="p">[</span><span class="m">6</span><span class="o">:</span><span class="m">1</span><span class="p">],</span><span class="w">
+        </span><span class="n">main</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Estimated top 6 features by accuracy gain"</span><span class="p">,</span><span class="w">
+        </span><span class="n">cex.names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">.6</span><span class="p">)</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/fineiskid/photo_kaggle/master/output/feature_importance.png" class="inline" /></p>
+
+<h3 id="2b-tune-hyperparameters-with-carettrain">(2.b) Tune hyperparameters with <code class="highlighter-rouge">caret::train</code></h3>
+<p>Since we really have little insight into whether we should use a small <code class="highlighter-rouge">max_depth</code> or a large one, let all of our features be available when constructing a weak learner (i.e. how to set <code class="highlighter-rouge">colsample_bytree</code>), etc… We should set up a grid of parameters, cross validate a model for every combination of parameters in the grid, and pick the best one! This is a very computationally expensive way to pick a model, and note that it’s still not even very refined when there are big discrete gaps in the hyperparameter values present in the grid. Still, we might be able to eek out better performance with a high-level gridsearch. Use R’s convenient <code class="highlighter-rouge">expand.grid</code> function to make a data.frame with every combination of hyperparameters you’re interested in; use <code class="highlighter-rouge">caret::trainControl</code> to specify the type of validation you’re interested in (we’ll do 5-fold cross validation); and use <code class="highlighter-rouge">caret::train</code> to search over the grid of hyperparameter combinations to find the model that minimizes log-loss. We can only use <code class="highlighter-rouge">caret</code> because it recently began supporting <code class="highlighter-rouge">model = 'xgbTree'</code> (caret supports hundreds of different models, actually), and it conveniently supports log-loss as an optimization metric too!</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">xgb_grid</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">expand.grid</span><span class="p">(</span><span class="n">nrounds</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">100</span><span class="p">),</span><span class="w">
+                        </span><span class="n">eta</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">0.2</span><span class="p">),</span><span class="w">
+                        </span><span class="n">max_depth</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">7</span><span class="p">,</span><span class="w"> </span><span class="m">10</span><span class="p">),</span><span class="w">
+                        </span><span class="n">colsample_bytree</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">0.6</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">),</span><span class="w">
+                        </span><span class="n">gamma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">0.75</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">),</span><span class="w">
+                        </span><span class="n">min_child_weight</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">))</span><span class="w">
+
+</span><span class="n">tr_control</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">caret</span><span class="o">::</span><span class="n">trainControl</span><span class="p">(</span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cv"</span><span class="p">,</span><span class="w">
+                          </span><span class="n">number</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">5</span><span class="p">,</span><span class="w">
+                          </span><span class="n">classProbs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">,</span><span class="w"> 
+                          </span><span class="n">allowParallel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">,</span><span class="w">
+                          </span><span class="n">summaryFunction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mnLogLoss</span><span class="p">,</span><span class="w"> </span><span class="c1">#Using summaryFunction = summaryFunction will use ROC (i.e. AUC) to select optimal model. We want log-loss.
+</span><span class="w">                          </span><span class="n">verboseIter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w"> 
+
+</span><span class="n">xgb_cv1</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">caret</span><span class="o">::</span><span class="n">train</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">,</span><span class="w">
+                       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">ifelse</span><span class="p">(</span><span class="n">y</span><span class="o">==</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"good"</span><span class="p">,</span><span class="w"> </span><span class="s2">"bad"</span><span class="p">)),</span><span class="w"> </span><span class="c1"># Target vector should be non-numeric factors to identify our task as classification, not regression.
+</span><span class="w">                       </span><span class="n">tuneGrid</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">xgb_grid</span><span class="p">,</span><span class="w"> </span><span class="c1">#Which hyperparameters we'll test.
+</span><span class="w">                       </span><span class="n">trControl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tr_control</span><span class="p">,</span><span class="w"> </span><span class="c1"># Specify how cross validation should go down.
+</span><span class="w">                       </span><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"xgbTree"</span><span class="p">,</span><span class="w">
+                       </span><span class="n">metric</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"logLoss"</span><span class="p">,</span><span class="w"> </span><span class="c1"># Convenient.
+</span><span class="w">                       </span><span class="n">maximize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w"> </span><span class="err">#</span><span class="w"> </span><span class="n">We</span><span class="w"> </span><span class="n">want</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">minimize</span><span class="w"> </span><span class="n">loss</span><span class="p">,</span><span class="w"> </span><span class="n">after</span><span class="w"> </span><span class="n">all.</span></code></pre></figure>
+
+<p>A couple of points regarding <code class="highlighter-rouge">caret</code>’s functionality versus <code class="highlighter-rouge">xgboost</code>’s: first, you’ll need to make <code class="highlighter-rouge">y</code> a factor vector instead of a numeric vector so that <code class="highlighter-rouge">caret::train</code> knows that you want to perform a classification task instead of a regression task. Also, with <code class="highlighter-rouge">caret</code> we can return to using matrices and data.frames instead of <code class="highlighter-rouge">xgb.DMatrix</code>’s. Finally - this gridsearch will take a <strong>long time</strong> (at least 3 hours on a Macbook with an i7 core processor).</p>
+
+<h3 id="3-visualize-performance-with-an-roc-curve-optional">(3) Visualize performance with an ROC curve (optional):</h3>
+<p>Receiver operating characteristics (ROC’s) are confusing, so I suggest reading the <a href="https://en.wikipedia.org/wiki/Receiver_operating_characteristic">Wikipedia</a> article about them. Maybe I’ll make a post about it soon. Basically, they just let you compare the performance of different classification models. A popular one called “area under curve” the false positive rate (i.e. rate at which we call a bad photo album good) versus the true positive rate (i.e. rate at which we call good albums good). When the false positive rate (FPR) is zero, we’ve just called every album ‘bad’ so the true positive rate (TPR) is 0%. Similarly, when we call every album good, the FPR is 100% and the TPR 100%. The best model ever would have 0% FPR and 100% TPR, so an “area under the curve” of 1. I suggest reading <a href="http://blog.yhat.com/posts/roc-curves.html">this</a> great intro link about AUC and ROC curves. Anyway, you need to obtain class probabilities from <code class="highlighter-rouge">caret::train</code> <strong>or</strong> <code class="highlighter-rouge">xgb.predict</code> in order to build an ROC curve.</p>
+
+<p>My code in <a href="https://github.com/fineiskid/photo_kaggle/blob/master/scripts/run_classifier.R">run_classifier.R</a> will let you build the ROC curve by hand as well as leverage the R packages <code class="highlighter-rouge">pROC</code> and <code class="highlighter-rouge">ROCR</code> for simplification:</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">auc_est</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">pROC</span><span class="o">::</span><span class="n">auc</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">],</span><span class="w"> </span><span class="n">valid.preds</span><span class="o">$</span><span class="n">good</span><span class="p">)</span><span class="w"> </span><span class="c1">#0.8638 on the validation set, not bad...
+</span><span class="w">
+</span><span class="n">rocr_pred</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">prediction</span><span class="p">(</span><span class="n">valid.preds</span><span class="o">$</span><span class="n">good</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="p">[</span><span class="o">-</span><span class="n">trainIndex</span><span class="p">])</span><span class="w">
+</span><span class="n">rocr_perf</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">performance</span><span class="p">(</span><span class="n">rocr_pred</span><span class="p">,</span><span class="w"> </span><span class="n">measure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"tpr"</span><span class="p">,</span><span class="w"> </span><span class="n">x.measure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"fpr"</span><span class="p">)</span><span class="w"> </span><span class="c1">#this is of class "performance," it's not a list
+</span><span class="n">auc_data</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">data.frame</span><span class="p">(</span><span class="s2">"fpr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unlist</span><span class="p">(</span><span class="n">rocr_perf</span><span class="o">@</span><span class="n">x.values</span><span class="p">),</span><span class="w"> </span><span class="s2">"tpr"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">unlist</span><span class="p">(</span><span class="n">rocr_perf</span><span class="o">@</span><span class="n">y.values</span><span class="p">))</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/fineiskid/photo_kaggle/master/output/roc_curve.png" class="inline" /></p>
+
+<h3 id="4-assemble-test-data-and-gather-predictions">(4) Assemble test data and gather predictions</h3>
+
+<p>Just like in step (1), use <code class="highlighter-rouge">assemble_data</code> to construct the test set with all of the new features we have. If you look in the <code class="highlighter-rouge">example_entry.csv</code> file that the Kaggle administrator supplied, they want for the output to have two columns, <em>id</em> and <em>good</em>, where <em>good</em> is binary 0/1. Since <code class="highlighter-rouge">caret::predict(model, newdata, type = "raw")</code> returns factor variables representing class membership, just use R’s super-convenient <code class="highlighter-rouge">ifelse</code> function to change the results to zeros and ones. Save the data, and submit!</p>
+
+<figure class="highlight"><pre><code class="language-r" data-lang="r"><span class="n">test_data</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">assemble_data</span><span class="p">(</span><span class="n">train_or_test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"test"</span><span class="p">,</span><span class="w">
+                          </span><span class="n">data_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./data/test.csv"</span><span class="p">,</span><span class="w">
+                          </span><span class="n">name_tfidf_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./data/test_name_tfidf.rds"</span><span class="p">,</span><span class="w">
+                          </span><span class="n">desc_caption_tfidf_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./data/test_desc_caption_tfidf.rds"</span><span class="p">,</span><span class="w">
+                          </span><span class="n">country_file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./data/aggregate_test_countries.RDS"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">test</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">test_data</span><span class="o">$</span><span class="n">data</span><span class="w">
+</span><span class="n">test_classes</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">predict</span><span class="p">(</span><span class="n">xgb_cv1</span><span class="p">,</span><span class="w"> </span><span class="n">test</span><span class="p">,</span><span class="w"> </span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"raw"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"good"</span><span class="p">,</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">0</span><span class="p">)</span><span class="w">
+
+</span><span class="c1">#Save and then submit predictions!
+</span><span class="n">write.csv</span><span class="p">(</span><span class="n">data.frame</span><span class="p">(</span><span class="n">id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">read.csv</span><span class="p">(</span><span class="s2">"./data/test.csv"</span><span class="p">)</span><span class="o">$</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">good</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">test_classes</span><span class="p">),</span><span class="w">
+          </span><span class="s2">"./output/test_predictions.csv"</span><span class="p">,</span><span class="w"> </span><span class="n">row.names</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span></code></pre></figure>
+
+<h3 id="optional-run-this-bad-boy-yourself">(Optional) run this bad boy yourself</h3>
+
+<p>From your command line, navigate to the <code class="highlighter-rouge">photo_kaggle</code> directory and run <code class="highlighter-rouge">&gt; Rscript ./scripts/run_classifier.R</code>. This will build an xgboost model and save predictions from the <code class="highlighter-rouge">test.csv</code> file provided to us on Kaggle. From here it’s easy to add and tune more hyperparameters, add some creative features, delete useless ones, etc. Xgboost is really powerful, have fun!</p>
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Data Science with Big Dillinger</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Data Science with Big Dillinger</li>
+          <li><a href="mailto:"></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/ffineis"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">ffineis</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/bigdillinger"><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">bigdillinger</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Thoughts about Data Science, R and Python tutorials, and life as a Statistics graduate student at Northwestern
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

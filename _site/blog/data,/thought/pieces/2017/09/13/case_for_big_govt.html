@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<html>
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>The Case for Big Brother in Big Data.</title>
+  <meta name="description" content="Garbage in, garbage out">
+
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="canonical" href="http://localhost:4000/blog/data,/thought/pieces/2017/09/13/case_for_big_govt.html">
+  <link rel="alternate" type="application/rss+xml" title="Data Science with Big Dillinger" href="http://localhost:4000/feed.xml">
+
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</head>
+
+
+  <body>
+
+    <header class="site-header">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/">Data Science with Big Dillinger</a>
+
+    <nav class="site-nav">
+      <a href="#" class="menu-icon">
+        <svg viewBox="0 0 18 15">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </a>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/about/">about</a>
+          
+        
+          
+        
+          
+          <a class="page-link" href="/blog/">blog</a>
+          
+        
+          
+          <a class="page-link" href="/tutorials/">tutorials</a>
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <div class="page-content">
+      <div class="wrapper">
+        <article class="post" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">The Case for Big Brother in Big Data.</h1>
+    <p class="post-meta"><time datetime="2017-09-13T00:00:00-05:00" itemprop="datePublished">Sep 13, 2017</time></p>
+  </header>
+
+  <div class="post-content" itemprop="articleBody">
+    <h3 id="garbage-in-garbage-out">Garbage in, garbage out</h3>
+
+<p>Data Scientists usually wear the messiness of the data they work with as a badge of honor. And they should! It’s not easy to take just any dataset and shape it into something that you can build a predictive model out of, or even just craft some sort of executive-level quantitative report. But when the task is training a model to deploy on real-time data, Data Scientists need to make sure their data was intended for more than a one-off type of analysis. We should demand structure.</p>
+
+<p>Here is an impression of a dataset a Data Scientist might see in the wild -</p>
+
+<table>
+  <caption>Made up lawnmower data. Can anyone else relate to this?</caption>
+  <thead>
+    <tr>
+      <th>ser_no</th>
+      <th>last_updated</th>
+      <th>trbd</th>
+      <th>price</th>
+      <th>id</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>U542</td>
+      <td>1900/01/01 00:00:99</td>
+      <td>K1242</td>
+      <td>245.88</td>
+      <td>342198</td>
+    </tr>
+    <tr>
+      <td>KT294</td>
+      <td>2017-09-10</td>
+      <td>K1242</td>
+      <td>232.98</td>
+      <td>342198</td>
+    </tr>
+    <tr>
+      <td>hello</td>
+      <td>NULL</td>
+      <td>test -- hold for Jim</td>
+      <td>112.23</td>
+      <td>342198</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>NULL</td>
+      <td>yes</td>
+      <td></td>
+      <td>342198</td>
+    </tr>
+    <tr>
+      <td>serial_no_234</td>
+      <td>Tuesday</td>
+      <td>KT234</td>
+      <td>112.23</td>
+      <td>342198</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<p>Maybe the people who supplied you this lawnmower data don’t know what the <em>trbd</em> field means, because their DBA who quit in 2011 designed their Salesforce database. Maybe your manager wants you to use this to build a model to predict lawnmower prices based on weather patterns, but nobody can tell you if <code class="highlighter-rouge">last_updated</code> can safely be interpreted as when each lawnmower was sold, which is pretty crucial if you’re going to try to join historical weather conditions to this price data.</p>
+
+<p>My point is that unstructured, free-text data can quickly lead to the “garbage in, garbage out” phenomena.</p>
+
+<p><img src="http://alison.dbsdataprojects.com/wp-content/uploads/sites/82/2016/04/cartoon-metadata.png" alt="Dilbert" /></p>
+
+<p><br /></p>
+
+<p>For supervised learning models, we can only expect a model to perform as well as quality of the labeled data used for training. If we don’t have a clue what separates a cat from a dog sample, your model is doomed, because evaluation metrics are now meaningless. More humans can help. Humans can make heuristics to label our data. We can use Amazon Turk to get many humans to help label our data, and humans can send data to other (human) subject matter experts for label verification. But does that not defeat the entire notion of machine learning, that data needs to pass under the nose of a human before we can learn anything interesting from it?</p>
+
+<p><br /></p>
+
+<h3 id="big-government-is-your-friend">Big government is your friend</h3>
+
+<p>We should demand more from our data, and the government can help demand it. Take the electrical grid. The Federal Engery Regulatory Commission (FERC) has an immense set of guidelines for electricity producers and transmission owners when it comes to reporting as how much energy was produced and transmitted across the grid. For example, FERC requires that all electric utility companies (e.g. ones that power entire towns, cities, or regions) have to complete the (Energy Information Administration’s Form 906)[https://www.eia.gov/electricity/2008forms/906-923crosswalk.xls] whereby the utilities have to outline exactly how much of what types of fuels each electricity plant used over the last year. Even the units of fuel are prespecified to a selection of either “tons,” “barrels,” or “thousands of cubic feet.” Now, Data Scientists won’t need to guess the units used, or, god forbid, call the power plant and find the person who filled out the EIA 906 form to ask them about units. FERC has enforced reasonable standards in our public data, and this benefits Data Scientists by allowing us to build models that can leverage the EIA 906 form for any major electrical plant in the country, not just the handful that would have included units of input energy without the data guidelines.</p>
+
+<table>
+  <caption>EIA 906 data for electricity utilties. A Data Scientist's dream.</caption>
+  <thead>
+    <tr>
+      <th>PLANT NAME</th>
+      <th>PLANT ID</th>
+      <th>STATE</th>
+      <th>PRIME MOVER TYPE</th>
+      <th>ENERGY SOURCE</th>
+      <th>GROSS GENERATION (Mwh)</th>
+      <th>NET GENERATION (Mwh)</th>
+      <th>UNITS (Tons, Barrels, or 1000s tons)</th>
+      <th>STOCKS AT END OF PERIOD</th>
+      <th>HEAT CONTENT PER UNIT OF FUEL (Million Btu)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Sunapee</td>
+      <td>AP123</td>
+      <td>HIe</td>
+      <td>Diesel engine</td>
+      <td>Diesel fuel</td>
+      <td>100.1</td>
+      <td>12.5</td>
+      <td>Barrels</td>
+      <td>34.1</td>
+      <td>6832.22</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><br /></p>
+
+<p>The government has solved so many other huge data headaches simply by enforcing similar data schemas. What if any publicly-traded company was able to report their annual earnings using a report template they created themselves? Apple would use one set of profit reporting guidelines while Ford used another and IBM used another one, and none of the reports would look the same. Instead, the Securities and Exchange Commission makes everyone use a 10-k form. What if there were no standards for reporting daily trading volume, high, low, and closing stock prices? We all benefit immensely from having agreed-upon and enforced data schemas.</p>
+
+<p>Take just the example of a Vehicle Identificaion Number (VIN). All cars have one, and it’s a standard enforced by the International Organization for Standardization - a body run by the UN, the definition of “big government.” Any Data Scientist should immediately appreciate the VIN - it’s an immutable, easily-interpreted primary key. If you have access to a car’s VIN, you have a unique identifier for any car in addition to information about the car’s characteristics that is vendor-agnostic. Without some sort of ISO convention for unique automobiles, any type of cross-vehicle make comparison would be a nightmare of ad hoc rules about what constitues an SUV, or fixing discrepancies between auto manufacturers that track the age of each car based on the year it came off of the assembly line versus manufacturers that track age based on a car’s model year.</p>
+
+<p><br /></p>
+
+<h3 id="the-point">…the point?</h3>
+
+<p>I only say all of this for two reasons - (1) to defend the notion that the government does do useful things and (2) because I believe that the industries most ripe for distruption by the Internet of Things (IoT) analytics are those that are in some way overseen by some type of governmental or regulatory body. Left to their own devices, groups of competing entities building things like sensors, valves, power plants, or automobiles would most likely just create their own data and reporting conventions. This creates obstacles in letting fully human-independent machine learning take root in a way that easily scales across an industry. When “big brother” is around to nudge everyone to create, at the very least, data that vaguely resembles everyone else’s data, this unlocks doors in terms of the scope of problems upon which Data Scientists can hope to deploy machine learning solutions.</p>
+
+
+  </div>
+
+</article>
+
+      </div>
+    </div>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Data Science with Big Dillinger</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>Data Science with Big Dillinger</li>
+          <li><a href="mailto:"></a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/ffineis"><span class="icon icon--github"><svg viewBox="0 0 16 16"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">ffineis</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/bigdillinger"><span class="icon icon--twitter"><svg viewBox="0 0 16 16"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">bigdillinger</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>Thoughts about Data Science, R and Python tutorials, and life as a Statistics graduate student at Northwestern
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

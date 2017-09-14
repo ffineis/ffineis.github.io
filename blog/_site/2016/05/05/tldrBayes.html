@@ -1,0 +1,219 @@
+<h3 id="youve-heard-of-the-debate">You’ve heard of the debate</h3>
+<p>All data scientists have heard of the famous <em>frequentist-Bayesian controversy</em>.
+If you’re like me, when you’re asked the question, “Bayesian or a frequentist?”
+you just say “frequentist” because you’re just guessing that Bayesian statistics
+has something to do with Bayes’ Theorem, and you haven’t used Bayes’ Theorem
+since college when you had the <a href="https://en.wikipedia.org/wiki/Monty_Hall_problem">Monty-Hall
+problem</a> on your homework. Am
+I alone? Quite possibly.</p>
+
+<p>Anyways, the other day I finally came across an excellent, (potentially) real-
+world situation that clearly illustrates the difference between a Bayesian
+outlook and the frequentist outlook.</p>
+
+<h3 id="the-set-up">The set-up</h3>
+<p>Just in case you’re a lawyer, this example is entirely fictional and is taken
+directly from <em>Bayesian Methods for Data Analysis</em> by Carlin and Louis, and all
+characters and companies are fictious, any seeming correspondence to actual
+people and companies is purely a coincidence. Here’s the set-up: it’s November
+2015, just a few weeks before Shmerger King starts wants to start selling
+hotdogs. You’re a hotshot consultant hired to test whether or not people prefer
+hotdogs made out of mice (<strong>case A</strong>) or hotdogs made out of cats (<strong>case B</strong>).</p>
+
+<p>Because of your time constraint, you were only able to (randomly) gather 25
+people to sign up for your study. Here’s your study: each person gets two
+hotdogs, one made out of mice and one made out of cats (the subjects don’t know
+which hotdog is which), and you need to assess the probability that people
+genuinely prefer mice hotdogs (case A), and we’re going to call this <script type="math/tex">\theta</script>.
+You ran the experiment and 20 people said they prefer mice hotdogs. So… what
+do you tell Shmerger King? What if this 80% mice hotdog preference was a fluke?</p>
+
+<h3 id="bayes-frequentist-debate-summed-up">Bayes-frequentist debate summed up</h3>
+<p><strong>Frequentists</strong> will say this: <script type="math/tex">\theta</script> is the average fraction of people that
+prefer mice hotdogs to cat hotdogs if you ran the experiment infinity times. If
+not infinity times, then at least like, a bunch of times. There’s not enough
+time to repeat this experiment over and over hotshot!</p>
+
+<p><strong>Bayesians</strong> will say this:
+<script type="math/tex">\text{Pr}(\theta|data) \propto \text{likelihood}(data|\theta)\times\text{Pr}(\theta)</script></p>
+
+<p>Bayesians call <script type="math/tex">\text{Pr}(\theta | data)</script> the <strong>posterior probability</strong> of
+<script type="math/tex">\theta</script> . Now, it’s up to you, the hotshot consultant, to postulate both a
+<em>likelihood</em> function that specifies the probability of the data given some
+value of <script type="math/tex">\theta</script> and a <em>prior</em> distribution for <script type="math/tex">\theta</script> itself.</p>
+
+<h3 id="not-that-bad">Not that bad</h3>
+<p>Yeah, ok, Bayesians have to specify the likelihood function of the data and the
+prior for the missing parameter. Frequentists don’t do this. But for this
+experiment, specifying a likelihood is pretty easy: Clearly, each subject’s
+response should be independent from each of the other 24 subjects’ response, and
+since there are just two outcomes, “mice hotdog preference” or “cat hotdog
+preference,” the likelihood really lends itself to a binomial distribution. This
+is to say, if <script type="math/tex">\theta</script> takes on some value, say 0.75, then the probability that
+20/25 people will prefer the mice hotdogs is a lot higher than if <script type="math/tex">\theta =
+0.3</script>.</p>
+
+<p>Priors are a little bit more complicated, because as a hotshot consultant you
+have to think about <em>what you genuinely believe</em> about the distribution of
+<script type="math/tex">\theta</script>. Maybe you think that people will really like the mice hotdogs because
+there’s some literature out there about people eating mice. Maybe you have zero
+information about people’s preferences. Maybe you’re skeptical and you think
+that people won’t be able to tell the difference between the hotdogs, suggesting
+that <script type="math/tex">\theta</script> is probably centered around 0.5. A good pick for a prior
+distribution would be the beta distribution because it’s really malleable, and
+it’s actually a <a href="https://en.wikipedia.org/wiki/Conjugate_prior">conjugate prior</a>
+to the binomial distribution. More on conjugate priors below.</p>
+
+<h3 id="envisioning-likelihood">Envisioning likelihood</h3>
+
+<p>The likelihood function defines the probability of observing the data (20 mice
+hotdog preferences in 25 trials) under a particular value of <script type="math/tex">\theta</script>. Below, we
+can see that if <script type="math/tex">\theta = 0.8</script> (the frequentist estimate), there’s a much higher
+probability that we see 20/25 mice hotdog preferences as opposed to when <script type="math/tex">\theta
+= 0.3</script>. If we kept going down this path, we’d probably just pick <script type="math/tex">\theta = 0.8</script>
+because this is the parameter estimate that <em>maximizes likelihood</em>.</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">binom</span><span class="p">,</span> <span class="n">beta</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="o">%</span> <span class="n">matplotlib</span> <span class="n">inline</span>
+<span class="kn">import</span> <span class="nn">seaborn</span> <span class="kn">as</span> <span class="nn">sns</span><span class="p">;</span> <span class="n">sns</span><span class="o">.</span><span class="nb">set</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">p1</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">;</span> <span class="n">p2</span> <span class="o">=</span> <span class="mf">0.3</span>
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">30</span><span class="p">)</span> <span class="c">#Note that binomial distribution is discrete.</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">binom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p1</span><span class="p">),</span> <span class="s">"b"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"theta = 0.8"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">binom</span><span class="o">.</span><span class="n">pmf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p2</span><span class="p">),</span> <span class="s">"r"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"theta = 0.3"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">'best'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"Likelihood under different thetas"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">"Population ratio of (Mice preferences)/(Cat preferences)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">"Density"</span><span class="p">)</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/FrankFineis/FrankFineis.github.io/master/images/burgers_likelihood_curves.png" class="inline" /></p>
+
+<h3 id="envisioning-the-prior">Envisioning the prior</h3>
+
+<p>The prior distribution for <script type="math/tex">\theta</script> allows you, the hotshot consultant, to
+inject your underlying believe about <script type="math/tex">\theta</script>, which is the proportion of all of
+Shmurger King’s clientelle that really prefers mice hotdogs to cat hotdogs, the
+thing you’re trying to pin down.</p>
+
+<p>The beta distribution is a natural fit for the prior here:
+- its support (the domain of values you can plug into the beta probability
+distribution function) is [0,1]
+- Through its two parameters, <script type="math/tex">\alpha</script> and <script type="math/tex">\beta</script> (in Bayesian statistics, the
+parameters of your prior are called <em>hyperparameters</em>, the shape of the beta
+distribution is highly configurable
+- It’s the conjugate prior distribution to the binomial distribution (so, our
+likelihood function), which means that the posterior distribution (i.e.
+<script type="math/tex">Pr(\theta | data)</script>) is also a beta distribution, just with different parameters
+than the prior. That’s what <em>conjugacy to the likelihood</em> means, that your
+posterior distribution is of the same type as your prior.</p>
+
+<h4 id="what-do-you-think">What do you think?</h4>
+<p>Bayesian statistics lets us inject our subjective beliefs into our models.
+Perhaps, you think one of the following statements is true:</p>
+
+<ul>
+  <li>(1) You have absolutely no idea whether or not people prefer mice hotdogs over
+cat hotdogs</li>
+  <li>(2) You think it’s likely that people won’t be able to tell the difference, so
+<script type="math/tex">\theta</script> tends to be around 0.5</li>
+  <li>(3) You think that people will either really love or really hate mice hotdogs,
+so <script type="math/tex">\theta</script> will likely take on extreme values.</li>
+</ul>
+
+<p>With the beta(1,1), beta(0.5, 0.5), and beta(2,2) distributions, respectively,
+we can emulate those scenarios:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+
+<span class="c">## Define vector of potential theta values</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">100</span><span class="p">)</span>
+
+<span class="c">## Plot prior distributions</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="s">"b"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"beta(1,1)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="s">"r"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"beta(0.5,0.5)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s">"DarkOrange"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"beta(2,2)"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">'best'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"Different prior parameterizations"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">"Theta"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">"Density"</span><span class="p">)</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/FrankFineis/FrankFineis.github.io/master/images/burgers_priors.png" class="inline" /></p>
+
+<h3 id="putting-it-together-the-posterior">Putting it together: the posterior</h3>
+
+<p>Since the beta distribution is the conjugate prior to the binomial likelihood
+function (no derivation here), the posterior is also a beta distribution, only
+now \[\alpha = \alpha_{prior} + \text{successes}\] and \[\beta =\beta_{prior} + n -
+\text{successes}\]
+The derivation of the posterior’s parameters involves multiplying the beta prior and binomial likelihood functions together,
+it’s a big drawn out process. As a hotshot consultant, you’d probably just want
+to consult mathematica, Google, or the <em>Bayesian Methods for Data Analysis</em>
+book. The main point is that the posterior distribution is just a reparameterization of the prior! That’s why people like conjugate priors.</p>
+
+<p>Anyway, the main point is that our choice of hyperparameters (i.e. how we
+parameterized the prior), will affect the posterior distribution. In plotting
+the resultant posterior distributions of <script type="math/tex">\theta</script>, notice that your choice for
+hyperparameters really doesn’t change the shape or location of the posterior!</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> <span class="n">figsize</span> <span class="o">=</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+
+<span class="c">## Observed data: number of successes</span>
+<span class="n">success</span> <span class="o">=</span> <span class="mi">20</span>
+
+<span class="c">## Plot posteriors</span>
+<span class="n">one_postr</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">1</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">five_postr</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mf">0.5</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">two_postr</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="mi">2</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">one_postr</span><span class="p">,</span> <span class="s">"b"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"Posterior w/ beta(1,1) prior"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">five_postr</span><span class="p">,</span> <span class="s">"r"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"Posterior w/ beta(0.5,0.5) prior"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">two_postr</span><span class="p">,</span> <span class="s">"DarkOrange"</span><span class="p">,</span> <span class="n">label</span> <span class="o">=</span> <span class="s">"Posterior w/ beta(2,2) prior"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s">'best'</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s">"Posterior distributions under different prior parameterizations"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s">"Theta"</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s">"Density"</span><span class="p">)</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/FrankFineis/FrankFineis.github.io/master/images/burgers_posteriors.png" class="inline" /></p>
+
+<h3 id="drawing-conclusions">Drawing conclusions</h3>
+<p>As you can see from the plots directly above, the posterior distribution’s mode
+settles right around <script type="math/tex">\theta = 0.8</script> across our three prior parameterizations.
+One of the benefits of a Bayesian analysis is that there’s no ambiguity in what
+we mean by “confidence interval.”</p>
+
+<p>Remember the hoopla in your intro to stats class about confidence intervals? To
+frequentists, the term “confidence interval” means that “If I ran the experiment
+100 times, about 95 of the confidence intervals that I estimate (I’m estimating
+the 95% confidence interval of <script type="math/tex">\theta</script> in each experiment) will cover the true
+value of <script type="math/tex">\theta</script>.” It’s way easier in Bayesian statistics.</p>
+
+<p>Now, you can finally say, “The probability that <script type="math/tex">\theta</script> lies between a and b is
+95%,” and Bayesian statisticians call “confidence intervals” <strong>“credible sets.”</strong></p>
+
+<p>All you do to get a “credible set” is find differences in cumulative densities
+of the posterior! Moreover, we can use the beta cumulative density function to
+assess the probability that <script type="math/tex">\theta</script> is greater than some value that the
+Schmerger King execs will be happy with, such as <script type="math/tex">\theta = 0.6</script>, under each
+prior distribution:</p>
+
+<figure class="highlight"><pre><code class="language-python" data-lang="python"><span class="c">## Find posterior modes</span>
+<span class="n">posteriors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">one_postr</span><span class="p">,</span> <span class="n">five_postr</span><span class="p">,</span> <span class="n">two_postr</span><span class="p">])</span>
+<span class="n">modes</span> <span class="o">=</span> <span class="n">theta</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">apply_along_axis</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">posteriors</span><span class="p">)]</span>
+
+<span class="c">## Calculate credible intervals</span>
+<span class="n">posterior_params</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.5</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="o">+</span><span class="n">success</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="n">success</span><span class="o">+</span><span class="mi">2</span><span class="p">]])</span>
+<span class="n">CI</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">posterior_params</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+    <span class="n">CI</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">beta</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">posterior_params</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">posterior_params</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-</span> \
+            <span class="n">beta</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="mf">0.6</span><span class="p">,</span> <span class="n">posterior_params</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">posterior_params</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="k">print</span> <span class="s">"Under prior distribution {} we are {:.2f}</span><span class="si">% </span><span class="s">sure that theta &gt; 0.6."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">100</span><span class="o">*</span><span class="n">CI</span><span class="p">[</span><span class="n">i</span><span class="p">])</span></code></pre></figure>
+
+<p><img src="https://raw.githubusercontent.com/FrankFineis/FrankFineis.github.io/master/images/tldrbayes_CDF_results.png" class="inline" /></p>
+
+<p>Given that we’ve made some pretty reasonable assumptions for the likelihood and
+prior distributions, you can safely report that people firmly prefer mice
+hotdogs to cat hotdogs.</p>

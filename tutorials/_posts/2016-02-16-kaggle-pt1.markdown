@@ -1,0 +1,83 @@
+---
+layout: post
+title: "Example Case Interview: the Kaggle Competition. (Part 1)"
+date:   2016-02-16 23:28:13 -0600
+<!--categories: kaggle case-interview-->
+---
+
+
+Alright, so you're an aspiring data scientist, say a graduate student in a STEM field trying to get into private industry, and congratulations, you've made it to the case study round! What do I mean by *case study*? Ah, I mean a timed test with a *training set* and a *test set*. You've been instructed to build a model that will give predicted values for the observations contained in the test set, and then your (hopefully) future employer will compare your values with the test set's true values. Few things get more meritocratic than that!
+
+
+#### General steps involved in a data science coding interview:
+1. Load your data. Poke around.
+2. Decide on an appropriate mathematical/machine learning model you'd like to use.
+3. Create a data processing pipeline for both your training and test data sets.
+	- Pick features you'd like to try in your model. A **feature** is generally a column within your dataset fed into your machine learning model.
+	- If applicable, standardize or normalize various features.
+4. Tune the model's hyperparameters through validation.
+5. Fit model with decided upon hyperparameters with all of your training data.
+6. Get predictions for the processed test data set.
+
+<br/>
+
+## Example case interview: the Kaggle photo album classification project
+[Kaggle](https://www.kaggle.com/) is a data science competition website where individuals (and teams) compete, sometimes for big bucks, on data science projects hosted by big name companies (Deloitte and NASA, just to name a few) who want/need models and solutions to said data science projects. The projects run the gamut in difficulty, and I've picked an easier one that serves as a good example for what you might expect for a data science case interview: the [photo album quality prediction](https://www.kaggle.com/c/PhotoQualityPrediction) project. You can track all of my relevant code and data [here](https://github.com/fineiskid/photo_kaggle) in this Github repo. The main idea is that we have data corresponding to photo albums that have been uploaded by users, and somehow they were labeled "good" or "bad." In the training set we have information about each photo album like number of photos, size of each photo, etc., and we seek to make a good/bad classification for a set of albums that have not been labeled, this latter set being the test set.
+
+<br/>
+
+## THE GIST:
+ Like I said, we'll need to process the training data, seek out new features, pick a model, train and tune it, process the test data, and get our predictions on the test data. I'm going to do this using `R`, and since there's been a lot of buzz about __extreme gradient boosting__ over the last year or two, and the [xgboost library](https://www.youtube.com/watch?v=Og7CGAfSr_Y) that implements the technique has won at least one Kaggle competition (probably more, I didn't feel like researching it further), we'll use xgboost to build a model/get predictions.
+
+I'm not going to get into the nitty gritty of boosted trees and gradient boosting, but from a high level, you can think of it as a weighted sum of small decision trees. The size of the weighted sum (i.e. the number of decision trees) is a hyper-parameter that we'll tune. Each additional decision tree itself comes from fitting the residuals between the outcome and the existing weighted sum of small residual trees. Xgboost by default builds this type of boosted tree model for classification purposes, but it can also be used for continuous, regression learning purposes by setting `objective = "reg:linear"` within the parameter list submitted to `xbg.train` (more on this to come). I'd Google it, but let's move on to data preprocessing first.
+
+When we make a model using the training data, we'll need to make sure that we treat the test data in exactly the same way we did the training data to get the same results. For example, if we scale one feature in the training set, we have to scale the corresponding feature in the test set. Staying organized is the number one priority!
+
+We will be evaluated according to the **log-loss** the host will calculate from our vector of predictions on the albums put forth in `test.csv`. We could theoretically evaluate log-loss by hand, it's given by
+
+![equation](http://www.sciweavers.org/tex2img.php?eq=%24%24-%5Csum%20%28y_%7Bi%7Dlog%28y_%7Bpred%7D%29%20%2B%20%281-y_%7Bi%7D%29log%281-y_%7Bpred%7D%29%29%24%24&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0 align="center" border="0" alt="$$-\sum (y_{i}log(y_{pred}) + (1-y_{i})log(1-y_{pred}))$$" width="339" height="22" />)
+
+Fortunately, the `xgboost` library will allow us to specify log-loss as the loss metric we want to minimize.
+
+<br/>
+
+## What our data looks like:
+1. `id`: index of the photo album. This is pretty useless towards training a predictive model, so this will be removed from training and test sets.
+2. `latitude`: integer-rounded latitude coordinates of geo-tag of the photo album.
+3. `longitude`: integer-rounded longitude coordinates of geo-tag of the photo album.
+4. `width`: The width of the images in the album, in pixels
+5. `height`: The height of the images in the album, in pixels
+6. `size`: The number of photos in the album
+7. `name`: Common words in the name of the album
+8. `description`: The common words in the description of the album
+9. `caption`: The common words in all the captions of the photos within the album
+10. `good`: 1 means the human reviewer liked the album, 0 means they didn't (we're trying to predict this value). Note that this column is only present in `training.csv` and not in `test.csv`.
+
+Note that the "words" have ben anonymized into integers. A word is present in the dataset if it has occured "more than 20 times in different albums," according to the Kaggle competition's host - this does not mean that the words in our dataset each occur at least 20 times (few of them do, actually).
+
+<br/>
+
+## Extra features:
+The main features that come with the training/test data are integer-rounded latitude/longitude coordinates, height/width of the photos used in albums being studied, the number of photos being studied (`size`), and anonymized text from the album name, album description, and album caption.
+
+1. *Area*: area is a nonlinear feature (it's multiplicative, duh) that might help us eek-out some extra performance.
+
+2. *Country*: country name may help; perhaps well-liked albums are more likely in exotic locales. While latitude/longitude might get us most of the way there especially with a tree-based algorithm like xgboost, this might help when coordinates are clustered together at the integer-level, but actual nation varies. I used [Geonames](http://www.geonames.org/) to gather country names based on the longitude/latitude integers supplied (see [geographic_features.R](https://github.com/fineiskid/photo_kaggle/blob/master/src/geographic_features.R) script) and saved a vector of names for each of the training and test sets. There's a great R package aptly titled `geonames` that handles all of the URL requests for you, and my script should walk you through the country name acquisition process pretty smoothly. When it's time to build the boosted model, we simply load `aggregate_train_countries.RDS` and `aggregate_test_countries.RDS` with R's `readRDS` function and attach them to our feature matrices.
+
+
+3. *Text frequency inverse document frequency data*: if we treat each album's name, caption, or description as a "document," then we can get text features by measuring each word's importance to the "document." Check out the [text_features.R](https://github.com/fineiskid/photo_kaggle/blob/master/src/text_features.R) script to see exactly how I've computed the TF-IDF features for the training and test sets. For a given word in a "document," that word's TF-IDF value will increase if the word occurs frequently in the document and decrease if the word is common across many different documents. I've built separate TF-IDF matrices for the `names` feature and a separate, combined matrix for both the `description` and `caption` features (I just mashed those features together as I don't know the difference between a photo album caption and a description). See `text_features.R` for the calculations. Again, we generate the TF-IDF features for each of the training and test sets and load them when necessary. An important note about TF-IDF features: because we can't assume that words present in the test set will necessarily be contained within the vocabulary of the training set, we have to designate the words in the test set not seen in the training set as having a TF-IDF value of zero. 
+
+
+<br/>
+
+## What's left to do?
+As of now have chosen a statistical model, checked out our data, and extracted some more features. Next, we'll have to train and tune an xgboost model. There are a **bunch** of parameters we can tune to try to minimize the log-loss, and we might look at some of these:
+
+- `max.depth` : how many levels each small trees in our model, which is a sum of small trees, will be allowed to have
+- `gamma` : when picking a new small tree to add to our model, this is the minimum reduction in loss required to allow a node on a tree to be split further into two child nodes
+- `colsample_bytree`: in an attempt to de-correlate the small trees we're adding to our model, for each tree we'll choose a fraction of columns to pick from the training data to build said tree (I think this is similar to `max_features` in Python's Random Forest classifier in Sklearn)
+- `num_round`: How many small trees comprise the model? This also represents the number of times we sweep over the training data, as we get one small tree per sweep.
+
+While in a Kaggle competition or a data science code interview you won't be able to know exactly how erroneous your predictions are on the test set, we can use cross-validation to get an estimate of test error for each set of parameters we'll test. Picking the set of parameters resulting in the least amount of cross-validated test error, we use those parameters to run `xgboost::predict()` and submit our predictions!
+
+
