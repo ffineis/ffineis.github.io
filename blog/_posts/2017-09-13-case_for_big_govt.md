@@ -2,7 +2,7 @@
 layout: post
 title:  "The Case for Big Brother in Big Data."
 date: "2017-09-13"
-categories: data, thought pieces
+excerpt: When a Data Scientists working to deploy models to entire industries or fleets should demand structure from their data. Big government, "big brother," what have you, can and should help us get to the next plateau when it comes to scaling machine learning applications beyond just one-off use cases and models.
 ---
 
 ### Garbage in, garbage out

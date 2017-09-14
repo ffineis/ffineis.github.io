@@ -4,16 +4,16 @@ title: about
 permalink: /about/
 ---
 
-Thanks for checking out Data science with Big Dillinger! I'm Frank (pseudonym Big Dillinger), an aspiring data scientist, part-time employee at [Uptake](http://uptake.com/) (a Chicago-based analytics company focused on Internet of Things applications) and full-time researcher at Northwestern University's Institute for Policy Research. While the term _data science_ can mean a lot of different things to a lot of different people, I'll focus on what's been useful to me and what one can expect to find covered in a typical [introduction to machine learning](http://www-bcf.usc.edu/~gareth/ISL/) type of book. I will most likely stick with R and Python (perhaps leaning more heavily towards R), but this is not to say that the pursuit of _data science_ is limited within the scope of these two programming languages - shout outs to Javascript, Matlab, and Julia!
+### Welcome!
 
-I will try to keep all relevant source code on my (personal) Github account:
-{% include icon-github.html username="fineiskid" %}. If any code is missing from that account, I will provide the alternative link.
+While the definition of "Data Science" may still remain elusive, I hope to share my thoughts on the subject, code, and progress in exploring the field with you here. I'm Frank Fineis (on twitter, Big Dillinger), a former Data Scientist at industrial internet of things analytics firm [Uptake](https://uptake.com/) turned statistics PhD student at Northwestern University ([I'm real!](http://www.statistics.northwestern.edu/people/graduate-students/)). 
 
-In addition to the code snippets and educational materials, please check out my blog for thought pieces regarding trends in data science and my space for Podcasts. Podcasts of all types are great! 
+![me](/images/ffineis_headshot.png){: .image-right } At Uptake, I worked on real-time anomaly detection models, time series smoothing, building time-to-failure models, and data pipelining/full-stack development via Postgres, [Apache Airflow](https://github.com/apache/incubator-airflow), and [Flask](http://flask.pocoo.org/). Research is absolutely something I'm new to, and I expect the next 5 years to be full of ups and downs - hopefully this makes for some interesting blog posts and code tutorials. My current interests are time series analysis, time-to-event modeling, and natural language processing, although all of this is subject to change.
 
- <br /> 
+I keep the code I'm allowed to work on openly on Github ({% include icon-github.html username=site.github_username %}). My thoughts and opinions are none other than my own and are in no way reflective of any employer or Northwestern University.
 
+### Contact
 
-Yours truly,  <br /> 
-Frank
+- Northwestern email: <FrankFineis2022@u.northwestern.edu>
+- Find me on [LinkedIn](http://bit.ly/2vW5kt5)
 
