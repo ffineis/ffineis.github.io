@@ -4,24 +4,22 @@ title: consulting
 permalink: /consulting/
 ---
 
-# Welcome
+# About me
 
-<img align="right" src="/images/ffineis_headshot.png" width="150px" height="150px" style="margin:10px 10px">
- While "Data Science", "Data Engineering" and "Big Data" still remain elusive (even in 2020),
+<img align="right" src="/images/ffineis_headshot.png" width="120px" height="120px" style="margin:0px 10px">
+ While the terms "Data Science", "Data Engineering" and "Big Data" remain hard to pin down exactly (even in 2020),
 I like sharing my thoughts and my ongoing learning by writing, coding, and exploring these fields with you here. 
 
-I'm Frank Fineis, an experienced Data Scientist, Data Engineer, Solution Architect, and statistics PhD student. Thoughts and opinions I express are none other than my own.
-
-Here is some of my background:
+I'm Frank Fineis, an experienced Data Scientist, Data Engineer, Solution Architect, and statistics PhD student. Thoughts and opinions I express are none other than my own. Here is some of my background:
 
 - **Lead Data Scientist at [Uptake](https://www.uptake.com/)**, a Chicago industrial internet of things SAAS firm. First task:
 real-time anomaly detection algorithm (hold a patent for this). Next tasks: building predictive failure models in R, prototyping applications with Shiny, building full-stack model performance tracking and NLP-based supervised label re-assignment automation
 platforms while managing a small, nimble team of rockstar data scientists and data engineers.
 - **Computational Research Analyst at Northwestern's [Institute of Policy Research](https://www.ipr.northwestern.edu/).** I worked with Professor Larry Hedges to anonymize 
-state department of education data for use by public research institutions.
+states' department of education data for use by public research institutions.
 - **Senior Consultant at [Aptitive](https://aptitive.com/).** Leading a team of SQL developers, we built an end-to-end cloud data platform and BI stack for a large North American
 logistics brokerage firm. AWS, Airflow, and Snowflake - this is how modern analytics platforms should work.
-- **Statistics PhD candidate at Northwestern.** Some of my varied research topics would be...
+- **Statistics PhD candidate at Northwestern.** Some of my varied research topics include...
     - Bioinformatics. Check out our open-sourced RNA-seq normalization tool called [degnorm](https://github.com/NUStatBioinfo/DegNorm) published in *Genome Biology*.
     - Deep learning. Working with LSTMs to predict nucleosome locations and another projected dedicated to detecting [adversarial examples](https://christophm.github.io/interpretable-ml-book/adversarial.html).
     - Mixture of experts models: did you know that radial basis function networks can be reformulated as a mixture of linear experts?
@@ -62,8 +60,8 @@ Let's chat. I can help.
             <input type="email" name="email" class="form-control" id="inputEmail" aria-describedby="emailHelp" placeholder="joanny@appleseed.com" required="required">
           </div>
           <br>
-          <div class="form-group" style="text-align: left;">
-            <textarea id="message" rows="10" cols="70" placeholder="Message"></textarea>
+          <div class="form-group">
+            <input type="text" name="inputMessage" class="form=control" style="margin-left: 10px; padding-right: 100px; width: 600px; height: 20px; border: 2px solid #cccccc;" id="inputMessage" placeholder="message">
           </div>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>
