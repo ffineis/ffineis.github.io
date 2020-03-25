@@ -2,7 +2,7 @@
 layout: post
 title:  "How bad is it? Exploring racial disparities in NCAA quarterbacking with an ETL pipeline"
 date: "2018-02-24"
-excerpt: When it comes to racial gaps in the rates of college football quarterbacking, what are the numbers? Let's explore an end-to-end ETL process - building a MySQL database, scraping a college football statistics website into that database with Python, automating a Google Image scrape, pushing data back into that database, and then use R to publish some metrics about efforts.
+excerpt: When it comes to racial gaps in the rates of college football quarterbacking, what are the numbers? Let's explore an end-to-end ETL process - building a MySQL database, scraping a college football statistics website into that database with Python, automating a Google Image scrape, pushing data back into that database, and then use R to publish some metrics from our efforts.
 ---
 
 I am not an avid sports fan, let alone well-versed in the who's-who of college football. But last fall, I was at the gym while ESPN was running through clips of the morning's SEC (Southeastern Conference) games; they cycled through three games. It struck me as odd that all six teams on TV had white quarterbacks. The Fall of 2017 was the height of the kneeling NFL player phenomena, and statistics about the racial composition of the NFL were everywhere.
@@ -10,8 +10,10 @@ I am not an avid sports fan, let alone well-versed in the who's-who of college f
 Perhaps the most widely reported statistic surrounding the NFL and race is that the league is comprised of about 70% African American players. Colin Kaepernick really kicked off the discussion of race as it pertains to football, and he's a quarterback, which is inarguably the most important position on a football team. He was only one of the 5 starting black quarterbacks in the NFL (out of 32) in 2017. The question of racial dispairities quarterbacking is important - what does this say about what team management, football fans, and league commissioners tend to value in the person representing and commanding their respective teams?
 
 <br/>
+<div style="align: center; text-align:center;">
 <img align="center" src="https://m.media-amazon.com/images/M/MV5BN2QxZTZlY2MtNWRmZS00M2Q1LWExYjAtOWZjMzM3ZDI1YjViXkEyXkFqcGdeQXVyNjcyODE2MTE@._V1_SY1000_CR0,0,666,1000_AL_.jpg" width="300px" height="400px">
-<em>Netflix's QB1 showcases a select few college-bound football prodigies.</em>
+<span>Netflix's QB1 showcases a select few college-bound football prodigies.</span>
+</div>
 <br/>
 
 So let's explore it - how lopsided is white quarterbacking in D1 college football, and is it worse than the NFL? Is this a general problem affecting college football as a whole, or is it localized to certain conferences? Maybe it's just "a few bad apples [teams]" that tend to only have white quarterbacks? All of the SQL, Python, and R code that I'm going to reference is available in my [ncaa_quarterbacks GitHub repository](https://github.com/ffineis/ncaa_quarterbacks), go check it out!
