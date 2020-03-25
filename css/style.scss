@@ -691,3 +691,22 @@ td{
     .vi    { color: #008080 } // Name.Variable.Instance
     .il    { color: #099 } // Literal.Number.Integer.Long
 }
+
+/**
+ * Contact form buttons
+ */
+
+input {
+  height: 20px;
+  flex: 0 0 200px;
+  margin-left: 10px;
+  padding-right: 100px;
+}
+
+textarea {
+    width: 600px;
+	height: 200px;
+	padding-right: 100px;
+	margin-left: 10px;
+	border: 3px solid #cccccc;
+}
