@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Data science: an elusive concept? Not really."
+title:  "Data science: an elusive concept? (Not really)"
 date:   2016-02-09 09:28:13 -0600
 categories: data
 ---

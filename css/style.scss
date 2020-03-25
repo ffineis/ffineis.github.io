@@ -7,14 +7,14 @@
 
 // Our variables
 $base-font-family: "PT Sans", Helvetica, Arial, sans-serif;
-$base-font-size:   16px;
+$base-font-size:   20px;
 $base-font-weight: 400;
-$small-font-size:  $base-font-size * 0.875;
+$small-font-size:  $base-font-size * 0.975;
 $base-line-height: 1.5;
 
 $spacing-unit:     30px;
 // Width of the content area
-$content-width:    800px;
+$content-width:    1200px;
 
 $on-palm:          600px;
 $on-laptop:        800px;
@@ -114,12 +114,14 @@ figcaption {
  */
 ul, ol {
     margin-left: $spacing-unit;
+    font-size: $small-font-size;
 }
 
 li {
     > ul,
     > ol {
          margin-bottom: 0;
+         font-size: $small-font-size;
     }
 }
 
@@ -163,7 +165,7 @@ a {
 blockquote {
     border-left: 4px solid;
     padding-left: $spacing-unit / 2;
-    font-size: 18px;
+    font-size: $base-font-size * 1.2;
     letter-spacing: -1px;
     font-style: italic;
 
@@ -179,7 +181,7 @@ blockquote {
  */
 pre,
 code {
-    font-size: 15px;
+    font-size: 16px;
     border: 1px solid;
     border-radius: 3px;
 }
@@ -475,7 +477,7 @@ td{
 }
 .footer-col-1 {
   width: -webkit-calc(35% - (#{$spacing-unit} / 2));
-  width: calc(35% - (#{$spacing-unit} / 2));
+  width: calc(30% - (#{$spacing-unit} / 2));
 }
 .footer-col-2 {
   width: -webkit-calc(20% - (#{$spacing-unit} / 2));
@@ -483,7 +485,7 @@ td{
 }
 .footer-col-3 {
   width: -webkit-calc(45% - (#{$spacing-unit} / 2));
-  width: calc(45% - (#{$spacing-unit} / 2));
+  width: calc(50% - (#{$spacing-unit} / 2));
 }
 @include media-query($on-laptop) {
   .footer-col-1,
@@ -514,7 +516,6 @@ td{
 }
 .post-list {
   margin-left: 0;
-  list-style: none;
   > li {
     margin-bottom: $spacing-unit;
   }
@@ -535,20 +536,26 @@ td{
   margin-bottom: $spacing-unit;
 }
 .post-title {
-  font-size: 52px;
+  font-size: 44px;
 
   text-align: center;
   font-family: "PT Sans";
   font-weight: 900;
   @include media-query($on-laptop) {
-    font-size: 36px;
+    font-size: 32px;
   }
 }
 .post-content {
   margin-bottom: $spacing-unit;
   padding-bottom: 3em !important;
   p {
-    font-size: 1.1rem;
+    font-size: 1.3rem;
+  }
+  h1 {
+    font-size: 36px;
+    @include media-query($on-laptop) {
+      font-size: 32px;
+    }
   }
   h2 {
     font-size: 30px;

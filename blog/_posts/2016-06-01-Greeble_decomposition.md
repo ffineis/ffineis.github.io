@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Meet the Greebles. In pursuit of alternative deep learning tutorial set."
+title: "Meet the Greebles. (In pursuit of alternative deep learning tutorial set)"
 date: "2016-06-01"
 ---
 

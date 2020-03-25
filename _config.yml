@@ -9,7 +9,7 @@
 title: Frank Fineis
 email: frank.fineis@gmail.com
 description: > # this means to ignore newlines until "baseurl:"
-  Data Science blogging. Statistics. Coding. Unsolicited opinions.
+  Data Science blogging. Statistics. Data Engineering. Consulting.
 baseurl: "" # the subpath of your site, e.g. /blog
 twitter_username: bigdillinger
 github_username:  ffineis
@@ -17,7 +17,7 @@ linkedin_username: frank-fineis
 linkedin_userid: 41770277
 paginate: 5
 theme-dark: false #Set to true to change to dark website theme
-plugins: [jekyll-paginate, kramdown]
+plugins_dir: [jekyll-paginate, kramdown]
 
 # Build settings
 markdown: kramdown
