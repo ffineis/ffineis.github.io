@@ -6,7 +6,7 @@ permalink: /consulting/
 
 # About me
 
-<img align="right" src="/images/ffineis_headshot.png" width="120px" height="120px" style="margin:0px 10px">
+<img align="right" src="/images/ffineis_headshot.png" width="140px" height="140px" style="margin:2px 10px">
  While the terms "Data Science", "Data Engineering" and "Big Data" remain hard to pin down exactly (even in 2020),
 I like sharing my thoughts and my ongoing learning by writing, coding, and exploring these fields with you here. 
 
@@ -51,17 +51,17 @@ Let's chat. I can help.
 
    <div class="col-md-5 offset-md-3 mt-5">
         <form accept-charset="UTF-8" action="https://getform.io/f/1a149a20-ea8e-4efe-9485-dde39591b5b7" method="POST"  target="_blank">
-          <div class="form-group" style="text-align: left;">
-            <label for="inputName">Name</label>
-            <input type="text" name="name" class="form-control" id="inputName" placeholder="Joanny Appleseed" required="required">
-          </div>
-          <div class="form-group" style="text-align: left;">
-            <label for="inputEmail">Email</label>
-            <input type="email" name="email" class="form-control" id="inputEmail" aria-describedby="emailHelp" placeholder="joanny@appleseed.com" required="required">
-          </div>
+        <div class="inline-input-class">
+        
+          <label for="Name">Name</label>
+          <input name="name" id="name" type="text" />
+          <label for="Email" style="padding-left: 20px;">Email</label>
+          <input name="email" id="email" type="text" required="required"/> 
+        
+        </div>
           <br>
           <div class="form-group">
-            <input type="text" name="inputMessage" class="form=control" style="margin-left: 10px; padding-right: 100px; width: 600px; height: 20px; border: 2px solid #cccccc;" id="inputMessage" placeholder="message">
+            <input type="text" name="inputMessage" class="form=control" style="margin-left: 1px; padding-right: 100px; width: 657px; height: 30px; font-size: 18px; border: 2px solid #cccccc;" id="inputMessage" placeholder="message">
           </div>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>

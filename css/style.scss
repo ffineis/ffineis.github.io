@@ -703,6 +703,17 @@ input {
   padding-right: 100px;
 }
 
+.inline-input-class label {
+    font-size: 18px;
+    padding-right: 1px;
+    padding-left: 1px;
+}
+
+.inline-input-class input {
+    font-size: 18px;
+    display: inline;
+}
+
 textarea {
     width: 600px;
 	height: 200px;
