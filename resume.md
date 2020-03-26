@@ -81,7 +81,7 @@ permalink: /resume/
 # Computing proficiency
 
 - **Languages**: Python, R, Matlab, C/C++, JS, bash shell scripting
-- **Data engineering**: SQL (Snowflake, PostgreSQL, MySQL, MS SQL Server), Apache Airflow + Hive + Pig, pyspark
+- **Data engineering**: SQL (Snowflake, PostgreSQL, MySQL, MS SQL Server), Redis, Apache Airflow + Hive + Pig, pyspark
 - **Dev tools**: git, Travis CI, Marathon, Docker, Singularity
 - **AWS cloud**: EC2, S3, CloudWatch, DMS, RDS, Lambda + Step functions (check out [my Alexa skill](https://www.amazon.com/Big-Dillinger-Dev-CTADelays/dp/B078SPPNHQ)), message passing (SNS, SQS)
 - **Data science tools**: PyTorch, Keras, TensorFlow, Pandas + Numpy + Scipy + scikit-learn, Tableau, Flask, R Shiny
