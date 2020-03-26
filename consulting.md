@@ -6,7 +6,7 @@ permalink: /consulting/
 
 # About me
 
-<img align="right" src="/images/ffineis_headshot.png" width="140px" height="140px" style="margin:2px 10px">
+<img align="right" src="/images/aptitive_headshot.jpg" width="200px" height="200px" style="margin:2px 10px">
  While the terms "Data Science", "Data Engineering" and "Big Data" remain hard to pin down exactly (even in 2020),
 I like sharing my thoughts and my ongoing learning by writing, coding, and exploring these fields with you here. 
 
