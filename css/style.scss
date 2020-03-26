@@ -112,7 +112,7 @@ figcaption {
 /**
  * Lists
  */
-ul, ol {
+ul, ol, dl {
     margin-left: $spacing-unit;
     font-size: $small-font-size;
 }
@@ -701,6 +701,17 @@ input {
   flex: 0 0 200px;
   margin-left: 10px;
   padding-right: 100px;
+}
+
+.inline-input-class label {
+    font-size: 18px;
+    padding-right: 1px;
+    padding-left: 1px;
+}
+
+.inline-input-class input {
+    font-size: 18px;
+    display: inline;
 }
 
 textarea {

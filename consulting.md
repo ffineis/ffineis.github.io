@@ -4,24 +4,22 @@ title: consulting
 permalink: /consulting/
 ---
 
-# Welcome
+# About me
 
-<img align="right" src="/images/ffineis_headshot.png" width="150px" height="150px" style="margin:10px 10px">
- While "Data Science", "Data Engineering" and "Big Data" still remain elusive (even in 2020),
+<img align="right" src="/images/ffineis_headshot.png" width="140px" height="140px" style="margin:2px 10px">
+ While the terms "Data Science", "Data Engineering" and "Big Data" remain hard to pin down exactly (even in 2020),
 I like sharing my thoughts and my ongoing learning by writing, coding, and exploring these fields with you here. 
 
-I'm Frank Fineis, an experienced Data Scientist, Data Engineer, Solution Architect, and statistics PhD student. Thoughts and opinions I express are none other than my own.
-
-Here is some of my background:
+I'm Frank Fineis, an experienced Data Scientist, Data Engineer, Solution Architect, and statistics PhD student. Thoughts and opinions I express are none other than my own. Here is some of my background:
 
 - **Lead Data Scientist at [Uptake](https://www.uptake.com/)**, a Chicago industrial internet of things SAAS firm. First task:
 real-time anomaly detection algorithm (hold a patent for this). Next tasks: building predictive failure models in R, prototyping applications with Shiny, building full-stack model performance tracking and NLP-based supervised label re-assignment automation
 platforms while managing a small, nimble team of rockstar data scientists and data engineers.
 - **Computational Research Analyst at Northwestern's [Institute of Policy Research](https://www.ipr.northwestern.edu/).** I worked with Professor Larry Hedges to anonymize 
-state department of education data for use by public research institutions.
+states' department of education data for use by public research institutions.
 - **Senior Consultant at [Aptitive](https://aptitive.com/).** Leading a team of SQL developers, we built an end-to-end cloud data platform and BI stack for a large North American
 logistics brokerage firm. AWS, Airflow, and Snowflake - this is how modern analytics platforms should work.
-- **Statistics PhD candidate at Northwestern.** Some of my varied research topics would be...
+- **Statistics PhD candidate at Northwestern.** Some of my varied research topics include...
     - Bioinformatics. Check out our open-sourced RNA-seq normalization tool called [degnorm](https://github.com/NUStatBioinfo/DegNorm) published in *Genome Biology*.
     - Deep learning. Working with LSTMs to predict nucleosome locations and another projected dedicated to detecting [adversarial examples](https://christophm.github.io/interpretable-ml-book/adversarial.html).
     - Mixture of experts models: did you know that radial basis function networks can be reformulated as a mixture of linear experts?
@@ -30,7 +28,7 @@ logistics brokerage firm. AWS, Airflow, and Snowflake - this is how modern analy
     
 # Consulting
 
-If you're looking for an experienced data scientist, data engineer, or solution architect, then let's get together.
+If you're looking for an experienced data scientist, data engineer, or solution architect, then let's chat.
 
 - **SQL database development, optimization, and administration**. PostgresSQL, Snowflake, MySQL, MS SQL Server, Oracle, all of it, any aspect.
 - **Python** code development and web dev. Need an [experienced Flask developer](https://github.com/NUStatBioinfo/nuclstm/tree/master/nuc_viewer/nuc_viewer_app)?
@@ -47,23 +45,23 @@ If you're looking for an experienced data scientist, data engineer, or solution 
 
 # Get in touch
 
-Let's chat. I can help.
+Let's work together.
 
 <html>
 
    <div class="col-md-5 offset-md-3 mt-5">
         <form accept-charset="UTF-8" action="https://getform.io/f/1a149a20-ea8e-4efe-9485-dde39591b5b7" method="POST"  target="_blank">
-          <div class="form-group" style="text-align: left;">
-            <label for="inputName">Name</label>
-            <input type="text" name="name" class="form-control" id="inputName" placeholder="Joanny Appleseed" required="required">
-          </div>
-          <div class="form-group" style="text-align: left;">
-            <label for="inputEmail">Email</label>
-            <input type="email" name="email" class="form-control" id="inputEmail" aria-describedby="emailHelp" placeholder="joanny@appleseed.com" required="required">
-          </div>
+        <div class="inline-input-class">
+        
+          <label for="Name">Name</label>
+          <input name="name" id="name" type="text" />
+          <label for="Email" style="padding-left: 20px;">Email</label>
+          <input name="email" id="email" type="text" required="required"/> 
+        
+        </div>
           <br>
-          <div class="form-group" style="text-align: left;">
-            <textarea id="message" rows="10" cols="70" placeholder="Message"></textarea>
+          <div class="form-group">
+            <input type="text" name="inputMessage" class="form=control" style="margin-left: 1px; padding-right: 100px; width: 657px; height: 30px; font-size: 18px; border: 2px solid #cccccc;" id="inputMessage" placeholder="message">
           </div>
           <br>
           <button type="submit" class="btn btn-primary">Submit</button>
