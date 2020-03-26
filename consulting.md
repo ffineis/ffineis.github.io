@@ -28,7 +28,7 @@ logistics brokerage firm. AWS, Airflow, and Snowflake - this is how modern analy
     
 # Consulting
 
-If you're looking for an experienced data scientist, data engineer, or solution architect, then let's get together.
+If you're looking for an experienced data scientist, data engineer, or solution architect, then let's chat.
 
 - **SQL database development, optimization, and administration**. PostgresSQL, Snowflake, MySQL, MS SQL Server, Oracle, all of it, any aspect.
 - **Python** code development and web dev. Need an [experienced Flask developer](https://github.com/NUStatBioinfo/nuclstm/tree/master/nuc_viewer/nuc_viewer_app)?
@@ -45,7 +45,7 @@ If you're looking for an experienced data scientist, data engineer, or solution 
 
 # Get in touch
 
-Let's chat. I can help.
+Let's work together.
 
 <html>
 
