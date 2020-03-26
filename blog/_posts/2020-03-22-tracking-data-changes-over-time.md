@@ -116,9 +116,9 @@ Under Type II changes, the meaning of each record changes. No longer is one reco
  
  
 We can even figure out the exact time window that each version of each record was good for by using SQL's `lead` function
-to tie the *next* version's `effective_date` at time $t + 1$ to the version at time $t$. That is, a particular
+to tie the *next* version's `effective_date` at time *t + 1* to the version at time *t*. That is, a particular
 version of an entity is only in effect until the next version of that same entity comes in at a later time. So in order
-to give each version of each load a $[\text{start}, \text{end})$ window, we would do the following:
+to give each version of each load a [start, end) window, we would do the following:
 
 <br>
 {% highlight sql %}
@@ -155,7 +155,7 @@ Suppose we have some sample data that includes a load (`load_id 123`). This load
 `load_id 123` had three different versions:
 
 1. `load_id 123` gets created on 3/27/2020 with the 'V' (short for "dry **v**an") transportation mode.
-2. This load's mode gets changed on 3/28/2020 to 'R' (short for **reefer**).
+2. This load's mode gets changed on 3/28/2020 to 'R' (short for "**re**frigerated").
 3. Two days later (on 3/30/2020), a logistics representative realizes that the load is not actually a reefer load after all,
 but still actually a dry van load.
 
@@ -314,8 +314,8 @@ select l.load_id
 from cte_loads l
 inner join cte_lanes as ln
     on l.lane_id = ln.lane_id
-    and greatest(load_start_date, lane_start_date) >= current_timestamp
-    and least(load_end_date, lane_end_date) <= current_timestamp
+    and greatest(load_start_date, lane_start_date) <= current_timestamp
+    and least(load_end_date, lane_end_date) >= current_timestamp
 order by load_start_date asc;
 {% endhighlight %}
 
