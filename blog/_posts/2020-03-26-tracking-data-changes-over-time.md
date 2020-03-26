@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Joining Type II change tables and logistics industry data"
-date: "2020-03-22"
+date: "2020-03-26"
 use_math: true
 excerpt: We'll use logistics data to illustrate the benefits, but added complexities, of usnig Type II changelog data for tracking complete data version history over time.
 ---
@@ -84,7 +84,8 @@ decided they needed an extra 5,000 lbs shipped a couple of days later:
 <br/>
 
 So Type I changes are updates in place. The main benefit of Type I changes are that they maintain the 1-1 mapping of rows to loads.
-The drawback are that you lose the ability to track *history*. All you know is which user made the 
+The drawback is that you lose the ability to track *history*. All you know is which user made the recent change, and when that change happened.
+We don't necessary know *what* changes occurred.
 
 You could "beef up" your Type I changes to apply the `updated_by_user` and `updated_date` concept to every field, so, adding
  `weight_updated_by_user` and `weight_updated_date` fields like this:
@@ -96,12 +97,12 @@ You could "beef up" your Type I changes to apply the `updated_by_user` and `upda
 <br/>
  
  But this is pretty awkward. And moreover, at any given time we're only retaining the most recent change in each field, so
-  this solution is still only a half-measure towards being able to track the full changelog history of every load.
+  this solution is still only a half-measure towards being able to track the full changelog history of a load.
   
 ## Type II changes
 
-Instead of updating individual records, what if we just inserted a new version of each entity as those changes arrived?
-Returning to our load that started at 30,000 lbs and increased to 35,000 lbs, a Type II change would appear
+Instead of updating individual records, what if we just inserted a new version of each record as those changes arrived? The Type II change
+for our load that started at 30,000 lbs and increased to 35,000 lbs would would appear
  as a near-duplicate record, but with the updated weight and a `effective_date` field telling us when the change was in effect.
  
 <br/>
@@ -111,13 +112,13 @@ Returning to our load that started at 30,000 lbs and increased to 35,000 lbs, a 
 </div>
 <br/>
   
-Under Type II changes, the meaning of each record changes. No longer is one record = one entity. One record is
- one version of one entity. Now `load_id 123` can show up multiple times. The *grain* of the table has changed.
+Leveraging Type II changes, the meaning of each record in a table has changed. No longer is one record = one entity. One record is
+ one *version* of one entity. Now `load_id 123` can show up multiple times. The *grain* of the table has changed.
  
  
 We can even figure out the exact time window that each version of each record was good for by using SQL's `lead` function
 to tie the *next* version's `effective_date` at time *t + 1* to the version at time *t*. That is, a particular
-version of an entity is only in effect until the next version of that same entity comes in at a later time. So in order
+version of an entity is only in effect until the next version of that same entity comes in at a later time. In order
 to give each version of each load a [start, end) window, we would do the following:
 
 <br>
@@ -137,22 +138,21 @@ order by start_date asc;
 
 <br>
 
-In this way, a record whose `end_date` is `NULL` indicates that this record is the currently *active* record, because
+In this way, we keep track of when exactly each version of a load was in effect. A record whose `end_date` is `NULL` indicates that this record is the currently *active* record, because
 it has yet to be superseded by a more recent version.
 
 While Type II changes add costs (e.g. need for a bigger server, cloud host wants more money more for storage), this
-strategy gives our client the ability to recreate each unique version of each load at any given point in time. But
-we have traded power for complexity, namely, in that we have made our table *more granular*.
+strategy gives our client the ability to recreate each unique version of each load at any given point in time. 
+We have traded power for complexity, namely, in that we have made our table *more granular*.
   
 # Joining in time with Type II changes
 
 We'd like to set our client up with Type II enabled tables. But a problem has arisen. If we were previously joining
-two tables on a simple (primary key, foreign key) matching, and Type II changes duplicate each primary/foreign key
+two tables on a simple (primary key, foreign key) match, and if Type II changes duplicate each primary/foreign key
 for every distinct version of each record, then joining on keys will join every change in table 1 to every change
  in table 2! In data modeling, this is called a [cartesian](https://en.wikipedia.org/wiki/Cartesian_product) (or cross) join, and it's a bad thing if it's not intentional.
  
-Suppose we have some sample data that includes a load (`load_id 123`). This load is assigned to `lane_id 555`, but
-`load_id 123` had three different versions:
+Suppose we have some sample data that includes a load (`load_id 123`). This load is assigned to `lane_id 555`. This load has three different versions:
 
 1. `load_id 123` gets created on 3/27/2020 with the 'V' (short for "dry **v**an") transportation mode.
 2. This load's mode gets changed on 3/28/2020 to 'R' (short for "**re**frigerated").
@@ -165,9 +165,8 @@ on 3/10/2020, it is assigned `destination_city_id = 17`.
 2. On 3/29/2020 a user realizes the mistake: `city_id 17` is Portland, Oregon, not Portland, Maine. Hey, honest mistake. They
 create a new version of `lane_id 555` with the correct destination.
 
-Next, a logistics analyst wants to join the `Loads` and `Lanes` tables (suppose `lane_id` is a foreign key contained in the `Loads` table). They notice the cartesian:
+Now a logistics analyst wants to join the `Loads` and `Lanes` tables (suppose tgat `lane_id` is a foreign key contained in the `Loads` table). They notice the cartesian:
 
-<br>
 {% highlight sql %}
 select l.load_id
     , l.lane_id
@@ -210,6 +209,12 @@ on 3/29/2020, so the original version of this load could not possibly have been 
 
 Clearly, we need to be able to join not only on primary/foreign keys but to be able to join across time. To do this,
 each `load_id` and each `lane_id` need an *effective window* explaining the time period each record is good for. There should really only be four records:
+
+<div style="align: center; text-align:center;">
+<img align="center" src="/images/load_123_lane_555.png" width="700px" height="300px">
+<span>The complete history of load_id 123 while joined to lane_id 555.</span>
+</div>
+<br/>
  
  - (1 record) The original version of `load_id 123` joins to the original version of `lane_id 555`
  - (2 records) The second version of `load_id 123` (with `mode = 'R'`) should be joined to both versions of `lane_id 555` (with `destination_city_id = 17` *and* `18`)
@@ -217,7 +222,7 @@ each `load_id` and each `lane_id` need an *effective window* explaining the time
 
 The easiest way tack on effective windows to each table is to use [common table expressions](https://www.sqlshack.com/sql-server-common-table-expressions-cte/) (CTEs). CTEs
 allow you to write and name select statements and use them as if they were database tables. Most SQL dialects support CTEs in some form. Now,
- we'll continue to join `Loads` to `Lanes` using `Loads.lane_id = Lanes.lane_id`, but now we filter down to `load_id` records whose effective window overlaps
+ we'll continue to join `Loads` to `Lanes` using `Loads.lane_id = Lanes.lane_id`, but now we filter down to `load_id` records whose effective windows overlap
  with corresponding `lane_id` effective windows.
 
 <br>
@@ -270,9 +275,8 @@ order by load_start_date asc;
 
 Now we only join together versions of loads to versions lanes that would have been possible to occur over time.
  
-What is going on in this join condition? There are only four possible ways that two 2-sided windows can intersect, four
-possible ways that an effective window on a record from one table (conveniently called Table 1) can intersect with any
- effective window on a record from Table 2:
+What is going on in this join condition? Well, there are only four possible ways that two 2-sided windows can intersect,
+so that's what each of the lines in the `and` join condition above are addressing:
  
 <br/>
 <div style="align: center; text-align:center;">
@@ -295,7 +299,7 @@ we only want joined changelog records that apply at the current moment in time, 
 
 Logically, two joined Type II records are only valid at the current moment in time if the latest `start_date`
 of either constituent record is *before* the `current_timestamp` while simultaneously the earliest `end_date` of either constituent
-record is *after* the `current_timestamp`:
+record is *after* the current point in time.
 
 {% highlight sql %}
 with cte_loads as (...)
@@ -320,7 +324,7 @@ order by load_start_date asc;
 {% endhighlight %}
 
 Now this query limits our results to only the version of loads that join to lanes (in time) whose joint
-effective window covers the current time. What I'm describing looks like this:
+effective windows include the current time. What I'm describing looks like this:
 
 
 <div style="align: center; text-align:center;">
