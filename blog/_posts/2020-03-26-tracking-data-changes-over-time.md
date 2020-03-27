@@ -16,7 +16,7 @@ no centralization among trucking companies. There isn't a meaningful Amazon or A
 simultaneously amenable to technological advancement, but also full of complicated, decentralized data.
 
 Here's what I learned working with my client: the logistics industry is in the midst of a massive transformation, from a federation of 
-human actors making gut-instinct choices into an automated system driven by subject matter experts who can drive data mining.
+human actors making gut-instinct choices into an automated system driven by subject matter experts who know a thing or two about the complexities of transportation management service data structures.
 
  Before we get into code, we'll need some useful industry terms:
 
