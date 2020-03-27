@@ -3,7 +3,7 @@ layout: post
 title:  "Joining Type II change tables and logistics industry data"
 date: "2020-03-26"
 use_math: true
-excerpt: We'll use logistics data to illustrate the benefits, but added complexities, of usnig Type II changelog data for tracking complete data version history over time.
+excerpt: We'll use logistics data to illustrate the benefits, but added complexities, of using Type II changelog data for tracking complete data version history over time.
 ---
 
 # Logistics industry 101
