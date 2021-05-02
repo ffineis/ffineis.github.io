@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "The inner workings of the lambdarank objective in LightGBM"
-date: "2021-04-11"
+date: "2021-05-01"
 use_math: true
 excerpt: The lambdarank loss function is a more complex pairwise classification loss, and implementing it efficiently is challengig. We'll lay out the math underlying NDCG optimization how LightGBM's LambdarankNDCG objective function achieves this goal.
 ---
