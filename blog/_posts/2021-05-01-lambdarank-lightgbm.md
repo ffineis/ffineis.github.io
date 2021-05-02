@@ -52,8 +52,8 @@ Since $\log(\cdot)$ is a monotone transformation - a fancy way of saing that $5 
 We typically express $Pr(y_{ij}\|s_{i}, s_{j})$ via the logistic function: $Pr(y_{ij}\|s_{i}, s_{j}) = \frac{1}{1 + e^{-\sigma(s_{i} - s_{j})}}$ because it's easy to differentiate and it gives us a way to smush pairwise model scores $s_{i}-s_{j}$ from $(-\infty, \infty)$ to the probability scale [0, 1]. The constant $\sigma$ it typical to set $\sigma=1$, but LightGBM exposes this as a hyperparameter named `sigmoid`, so I'll keep it in the notation.
 
 \begin{align}
-\ell\ell_{ij} &= y_{ij}\log(\frac{1}{1 + e^{-\sigma (s_{i} - s_{j})}}) + (1 - y_{ij})\log(\frac{e^{-\sigma(s_{i} - s_{j})}}{1 + e^{-\sigma(s_{i} - s_{j})}}) \\\
-&= -y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) + \log(e^{-\sigma (s_{i} - s_{j})}) - \log(1 + e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) \\\
+\ell\ell_{ij} &= y_{ij}\log(\frac{1}{1 + e^{-\sigma (s_{i} - s_{j})}}) + (1 - y_{ij})\log(\frac{e^{-\sigma(s_{i} - s_{j})}}{1 + e^{-\sigma(s_{i} - s_{j})}}) \\
+&= -y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) + \log(e^{-\sigma (s_{i} - s_{j})}) - \log(1 + e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) \\
 &= (1 - y_{ij})\log(e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})})
 \end{align}
 
@@ -80,8 +80,8 @@ It's not too difficult to understand: when $Y_{i} > Y_{j}$, the model will achie
 LightGBM is a machine learning library for gradient boosting. The core idea behind gradient boosting is that if you can take the first and second derivatives of a loss function you're seeking to minimize (or an objective function you're seeking to maximize), then LightGBM can find a solution for you using gradient boosted decision trees (GBDTs). Gradient boosting is more or less a functional version of [Newton's method](https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization), which is why we need the gradient and hessian. During training it builds a sequence of decision trees each fit to the gradient of the loss function when the model is evaluated on the data at the current boosting iteration.
 
 \begin{align}
-\frac{\partial \text{logloss}\_{ij}}{\partial s_{i}} &= \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{i} - s_{j})}} \\\
-&= \frac{-\sigma}{1 + e^{\sigma(s_{i} - s_{j})}} \hspace{10mm} (\text{having multiplied by} \hspace{1mm} \frac{e^{\sigma(s_{i} - s_{j})}}{e^{\sigma(s_{i} - s_{j})}}) \\\
+\frac{\partial \text{logloss}\_{ij}}{\partial s_{i}} &= \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{i} - s_{j})}} \\
+&= \frac{-\sigma}{1 + e^{\sigma(s_{i} - s_{j})}} \hspace{10mm} (\text{having multiplied by} \hspace{1mm} \frac{e^{\sigma(s_{i} - s_{j})}}{e^{\sigma(s_{i} - s_{j})}}) \\
 &= \lambda_{ij}
 \end{align}
 
@@ -114,8 +114,8 @@ We need to take a quick detour. Confusingly, LightGBM (as well as XGBoost) are k
 That we're using the *lambda* gradient to learn a GBDT lead to  **LambdaMART** [[4]](#4). Ok, now lets take the second derivative of $\ell \ell$ by taking the derivative of $\lambda_{ij}$ by using the quotient rule:
 
 \begin{align}
-\frac{\partial^{2} \text{logloss}\_{ij}}{\partial s_{i}^{2}} &= \frac{\sigma^{2}e^{-\sigma(s_{j} - s_{i})}|\Delta NDCG_{ij}|}{(1 + e^{-\sigma(s_{j} - s_{i})})^{2}} \\\
-&= \frac{-\sigma}{1 + e^{-\sigma(s_{j} - s_{i})}}|\Delta NDCG_{ij}| \cdot \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}} \\\
+\frac{\partial^{2} \text{logloss}\_{ij}}{\partial s_{i}^{2}} &= \frac{\sigma^{2}e^{-\sigma(s_{j} - s_{i})}|\Delta NDCG_{ij}|}{(1 + e^{-\sigma(s_{j} - s_{i})})^{2}} \\
+&= \frac{-\sigma}{1 + e^{-\sigma(s_{j} - s_{i})}}|\Delta NDCG_{ij}| \cdot \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}} \\
 &= \lambda_{ij}\frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}}
 \end{align}
 
@@ -180,11 +180,9 @@ There are actually a couple of different ranking objectives offered by LightGBM 
 
 ## Connecting the math to the code
 All of the `lambdarank` math is located primarily in two methods within the `LambdarankNDCG` objective class:
-1. [`GetSigmoid`](https://github.com/microsoft/LightGBM/blob/master/src/objective/rank_objective.hpp#L228) performs a look-up operation on a pre-computed, discretized logistic function: $$
-\begin{align}
+1. [`GetSigmoid`](https://github.com/microsoft/LightGBM/blob/master/src/objective/rank_objective.hpp#L228) performs a look-up operation on a pre-computed, discretized logistic function: \begin{align}
 \frac{\lambda_{ij}}{|\Delta NDCG_{ij}|} &= \frac{1}{1 + e^{\sigma(s_{i} - s_{j})}}
-\end{align}
-$$ stored in a vector named `sigmoid_table_`. Using pre-computed logistic function values reduces the number of floating point operations needed to calculate the gradient and hessian for each row of the dataset during each boosting iteration. `GetGradientsForOneQuery` passes $(s_{i} - s_{j})$ to `GetSigmoid`, which applies a scaling factor to transform $(s_{i} - s_{j})$ into an integer value (of type `size_t` in C++) so that can then be used to look up the corresponding value within `sigmoid_table_`.
+\end{align} stored in a vector named `sigmoid_table_`. Using pre-computed logistic function values reduces the number of floating point operations needed to calculate the gradient and hessian for each row of the dataset during each boosting iteration. `GetGradientsForOneQuery` passes $(s_{i} - s_{j})$ to `GetSigmoid`, which applies a scaling factor to transform $(s_{i} - s_{j})$ into an integer value (of type `size_t` in C++) so that can then be used to look up the corresponding value within `sigmoid_table_`.
 2. [`GetGradientsForOneQuery`](https://github.com/microsoft/LightGBM/blob/master/src/objective/rank_objective.hpp#L140) processes individual queries. This method launches two `for` loops, the outer loop iterating from `i=0` to `truncation_level_` (a reference to the [`lambdarank_truncation_level`](https://lightgbm.readthedocs.io/en/latest/Parameters.html#lambdarank_truncation_level) parameter) and the inner loop iterating from `j=i+1` to `cnt`, the latter being the number of items within the query at hand. This is where the math comes in:
 
 ```C++
@@ -199,9 +197,9 @@ p_hessian *= sigmoid_ * sigmoid_ * delta_pair_NDCG;     // Finish hessian calcul
 Let's tie the code together with the math, as I had particularly struggled to understand why `p_hessian =  p_lambda *  (1 - p_lambda)` was valid:
 
 \begin{align}
-\text{p_lambda} &= \frac{1}{1 + e^{\sigma(s_{i} - s_{j})}} \\\
-1 - \text{p_lambda} &= \frac{e^{\sigma(s_{i} - s_{j})}}{1 + e^{\sigma(s_{i} - s_{j})}} \\\
-\text{p_lambda}(1 - \text{p_lambda}) &= \frac{e^{\sigma(s_{i} - s_{j})}}{(1 + e^{\sigma(s_{i} - s_{j})})^{2}} \\\
+\text{p_lambda} &= \frac{1}{1 + e^{\sigma(s_{i} - s_{j})}} \\
+1 - \text{p_lambda} &= \frac{e^{\sigma(s_{i} - s_{j})}}{1 + e^{\sigma(s_{i} - s_{j})}} \\
+\text{p_lambda}(1 - \text{p_lambda}) &= \frac{e^{\sigma(s_{i} - s_{j})}}{(1 + e^{\sigma(s_{i} - s_{j})})^{2}} \\
 \Rightarrow \frac{\partial^{2}\text{logloss}}{\partial s_{i}^{2}} &= \sigma^{2}|\Delta NDCG_{ij}|\text{p_lambda}(1 - \text{p_lambda})
 \end{align}
 
