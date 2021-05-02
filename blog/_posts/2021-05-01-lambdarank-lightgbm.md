@@ -20,14 +20,14 @@ The number one reason why LETOR is harder than the more traditional supervised l
 LETOR training data is often stored in the SVMlight format, which comes from T. Joachim's SVMRank model and corresponding ML software written in C [[1]](#1). The SVMLight format basically reserves the first column for the dependent variable, the second column for what it calls the `qid`, or the group identifier, and then all other columns are reserved for feature values. So LETOR shares a similar data structure really to how we would need to shape data as input into RNN/LSTM models: (samples, time steps, $y$). One sample is comprised of multiple products within a single query, like this:
 
 
-|`   Y   `|`   qid   `|`  feature_0   `|`  feature_1   `|` feature_2   `|` feature_3   `|
-|---------|-----------|---------|---------|---------|---------|
-|`   0   `|`   0   `|`   12.2   `|`   -0.9   `|`   0.23   `|`   103.0   `|
-|`   1   `|`   0   `|`   13.0   `|`   1.29   `|`   0.98   `|`   93.5    `|
-|`   2   `|`   0   `|`   14.0   `|`   1.29   `|`   0.98   `|`   93.5   `|
-|`   0   `|`   0   `|`   11.9   `|`   1   `|`   0.94   `|`   90.2   `|
-|`   1   `|`   1   `|`   10.0   `|`   0.44   `|`   0.99   `|`   140.51   `|
-|`   0   `|`   1   `|`   10.1   `|`   0.44   `|`   0.98   `|`   160.88   `|
+| Y       |    qid  |   feature_0 | feature_1    | feature_2 | feature_3   |
+|---------|---------|-------------|--------------|-----------|-------------|
+|    0    |    0    |    12.2     |    -0.9      |   0.23    |   103.0     |
+|    1    |    0    |    13.0     |   1.29       |   0.98    |   93.5      |
+|    2    |    0    |    14.0     |   1.29       |   0.98    |   93.5      |
+|    0    |    0    |    11.9     |   1          |   0.94    |   90.2      |
+|    1    |    1    |    10.0     |   0.44       |   0.99    |   140.51    |
+|    0    |    1    |    10.1     |   0.44       |   0.98    |   160.88    |
 
 <br>
 
