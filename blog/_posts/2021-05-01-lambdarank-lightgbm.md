@@ -141,7 +141,6 @@ The fact is that the `lambdarank` LightGBM gradient is based on pairwise classif
 ```{python}
 import lightgbm as lgb
 import numpy as np
-import pandas as pd
 
 np.random.seed(123)
 X = np.random.normal(size=(100,5))
