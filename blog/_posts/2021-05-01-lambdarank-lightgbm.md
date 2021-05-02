@@ -3,7 +3,7 @@ layout: post
 title:  "The inner workings of the lambdarank objective in LightGBM"
 date: "2021-05-01"
 use_math: true
-excerpt: The lambdarank loss function is a more complex pairwise classification loss, and implementing it efficiently is challengig. We'll lay out the math underlying NDCG optimization how LightGBM's LambdarankNDCG objective function achieves this goal.
+excerpt: The lambdarank loss function is a more complex pairwise classification loss, and implementing it efficiently is challenging. We'll lay out the math underlying NDCG optimization how LightGBM's LambdarankNDCG objective function achieves this goal.
 ---
 
 # The ranking objective
@@ -61,19 +61,19 @@ We typically express $Pr(y_{ij}\|s_{i}, s_{j})$ via the logistic function: $Pr(y
 &= (1 - y_{ij})\log(e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})})
 \end{align}
 
-So of maximizing $\ell \ell_{ij}$ is good, then minimizing $-\ell \ell_{ij}$ must also be good. Machine learning practicioners commonly refer to -1 times the loglikelihood as `logloss`:
+If maximizing $\ell \ell_{ij}$ is good, then minimizing $-\ell \ell_{ij}$ must also be good. Machine learning practicioners commonly refer to -1 times the loglikelihood as `logloss`:
 
 \begin{align}
 \text{logloss}\_{ij} = (y_{ij}-1)\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})})
 \end{align}
 
-In the literature on pairwise loss for ranking, right here there is usually a slight of hand: $y_{ij} = 1$. The same information from ordering the items $(i, j) \rightarrow y=1$ can be gleaned from ordering the items $(j, i) \rightarrow y=0$. Training on tied pairs would not help the model to discern between relevant and irrelevant items. All we really need to keep are the instances of $y_{ij}=1$. Therefore, pairwise log-loss can be simplified:
+In the literature on pairwise loss for ranking, right here is where I've witnessed a slight of hand: we only need to learn from the cases where $y_{ij} = 1$. This is because negative cases are symmetric; when $Y_{i} > Y_{j}$ (meaning that the pair $(i, j)$ has the label $y=1$), this implies that $(j, i)$ has label $y=0$. Training on tied pairs doesn't help, because the model is trying to discern between relevant and irrelevant items. Therefore, all we really need to keep are the instances of $y_{ij}=1$, and the pairwise logloss expression can be simplified.
 
 \begin{align}
 \text{logloss}\_{ij} = \log(1 + e^{-\sigma (s_{i} - s_{j})})
 \end{align}
 
-This loss is also known as "pairwise logistic loss," "pairwise loss," and "RankNet" loss (after the siamese neural network used for pairwise ranking first proposed in [[2]](#2)).
+This loss is also known as "pairwise logistic loss," "pairwise loss," and "RankNet loss" (after the siamese neural network used for pairwise ranking first proposed in [[2]](#2)).
 
 <img align="center" src="../../../../images/pairwise_logistic_loss.png" alt="logistic loss" width="600"/>
 
@@ -119,7 +119,7 @@ We need to take a quick detour. Confusingly, LightGBM (as well as XGBoost) are k
 \end{align}
 
 
-That we're using the *lambda* gradient to learn a GBDT lead to  **LambdaMART** [[4]](#4). Ok, now lets take the second derivative of $\ell \ell$ by taking the derivative of $\lambda_{ij}$ by using the quotient rule:
+Since we've only derived the first derivative of the loss, let's find the second derivative by applying the quotient rule:
 
 \begin{align}
 \frac{\partial^{2} \text{logloss}\_{ij}}{\partial s_{i}^{2}} &= \frac{\sigma^{2}e^{-\sigma(s_{j} - s_{i})}|\Delta NDCG_{ij}|}{(1 + e^{-\sigma(s_{j} - s_{i})})^{2}}
@@ -131,12 +131,12 @@ That we're using the *lambda* gradient to learn a GBDT lead to  **LambdaMART** [
 &= \lambda_{ij}\frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}}
 \end{align}
 
-Ok, we're done with the math! Later on we'll map these components of the gradient and hessian to the actual C++ code used in LightGBM's actual lambdarank objective source code.
+And we're done with the math! Later on we'll map these components of the gradient and hessian to the actual C++ code used in LightGBM's actual lambdarank objective source code.
 
 #### **Pointwise, pairwise, or listwise?**
-A very confusing aspect of the `lambdarank` gradient is that despite being closely related to the gradient of the classic pairwise loss function, a LightGBM `LGBMRanker` model can score *individual* items within a query. It does not expect for two inputs to be provided as ranking input like `rnk.predict(x1, x2)`. Further, the calculations required to derive the gradient, $\frac{\partial \text{lambdarank loss}}{\partial s_{i}}$ involves sums over all pairs of items within a query, as if it were a listwise LETOR algorithm.
+A very confusing aspect of the `lambdarank` gradient is that despite being closely related to the gradient of the classic pairwise loss function, a LightGBM `LGBMRanker` model can score *individual* items within a query. It does not expect for two inputs to be provided as ranking input like `rnk.predict(x1, x2)`. Further, the calculations required to derive the gradient, $\frac{\partial \text{logloss}}{\partial s_{i}}$ involves sums over all pairs of items within a query, as if it were a listwise LETOR algorithm.
 
-The fact is that the `lambdarank` LightGBM gradient is based on pairwise classification, but a lambdaMART model involves fitting decision trees to gradients computed usinng all pairs of differentially-labeled items within a query. Each individual item (each row in the training data) is assigned its own gradient value, and then LightGBM simply regresses trees on those gradients. This is why we can score individual items like `rnk.predict(x1)`:
+The fact is that the `lambdarank` LightGBM gradient is based on pairwise classification, but a lambdaMART model involves fitting decision trees to gradients computed g all pairs of differentially-labeled items within a query. Each individual item (each row in the training data) is assigned its own gradient value, and then LightGBM simply regresses trees on those gradients. This is why we can score individual items like `rnk.predict(x1)`:
 
 ```{python}
 import lightgbm as lgb
