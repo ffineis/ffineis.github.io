@@ -39,33 +39,35 @@ Start by considering two items within a query result set, call them items $i$ an
 
 Then logically, pairwise loss should be large when $s_{i} - s_{j} < 0$ and small when $s_{i} - s_{j} > 0$. We can use this difference to model the probability in a binary classification model that the pair $(i, j)$ as "$Y=1$" or $(j, i)$ as "$Y=0$". This classification model will maximize the Bernoulli likelihood, $\mathcal{L}$, given the data consisting of all pairs $(i, j)$ where $Y_{i} > Y_{j}$. The Bernoulli likelihood parameterized by $\theta = Pr(y\|x)$, is expressed as
 
-$$
 \begin{align}
-\mathcal{L} &= \theta^{y_{i}}(1 -\theta)^{1-y_{i}}, \hspace{5mm} y_{i} \in \{0, 1\}
+\mathcal{L} = \theta^{y}(1 -\theta)^{1-y}, \hspace{5mm} y \in \{0, 1\}
 \end{align}
-$$
 
 Since $\log(\cdot)$ is a monotone transformation - a fancy way of saing that $5 < 6 \rightarrow \log(5) < \log(6)$ - then maximizing Bernoulli likelihood and log-likelihood is the same thing. Log-likelihood, or $\ell\ell$ is given by
 
-$$\ell\ell = \log(\mathcal{L}) = y\log(\theta) + (1-y)\log(1 - \theta)$$
-
-We typically express $Pr(y_{ij}\|s_{i}, s_{j})$ via the logistic function: $Pr(y_{i, j}\|s_{i}, s_{j}) = \frac{1}{1 + e^{-\sigma(s_{i} - s_{j})}}$ because it's easy to differentiate and it gives us a way to smush pairwise model scores $s_{i}-s_{j}$ from $(-\infty, \infty)$ to the probability scale [0, 1]. The constant $\sigma$ it typical to set $\sigma=1$, but LightGBM exposes this as a hyperparameter named `sigmoid`, so I'll keep it in the notation.
-
-$$
 \begin{align}
-\ell\ell_{ij} &= y_{ij}\log(\frac{1}{1 + e^{-\sigma (s_{i} - s_{j})}}) + (1 - y{ij})\log(\frac{e^{-\sigma(s_{i} - s_{j})}}{1 + e^{-\sigma(s_{i} - s_{j})}}) \\
-&= -y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) + \log(e^{-\sigma (s_{i} - s_{j})}) - \log(1 + e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) \\
-&= (1 - y_{ij})\log(e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) \\
+\ell\ell = \log(\mathcal{L}) = y\log(\theta) + (1-y)\log(1 - \theta)
 \end{align}
-$$
+
+We typically express $Pr(y_{ij}\|s_{i}, s_{j})$ via the logistic function: $Pr(y_{ij}\|s_{i}, s_{j}) = \frac{1}{1 + e^{-\sigma(s_{i} - s_{j})}}$ because it's easy to differentiate and it gives us a way to smush pairwise model scores $s_{i}-s_{j}$ from $(-\infty, \infty)$ to the probability scale [0, 1]. The constant $\sigma$ it typical to set $\sigma=1$, but LightGBM exposes this as a hyperparameter named `sigmoid`, so I'll keep it in the notation.
+
+\begin{align}
+\ell\ell_{ij} &= y_{ij}\log(\frac{1}{1 + e^{-\sigma (s_{i} - s_{j})}}) + (1 - y_{ij})\log(\frac{e^{-\sigma(s_{i} - s_{j})}}{1 + e^{-\sigma(s_{i} - s_{j})}}) \\\
+&= -y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) + \log(e^{-\sigma (s_{i} - s_{j})}) - \log(1 + e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})}) \\\
+&= (1 - y_{ij})\log(e^{-\sigma (s_{i} - s_{j})}) - y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})})
+\end{align}
 
 So of maximizing $\ell \ell_{ij}$ is good, then minimizing $-\ell \ell_{ij}$ must also be good. Machine learning practicioners commonly refer to -1 times the loglikelihood as `logloss`:
 
-$$\text{logloss}_{ij} = -\ell\ell_{ij} = (y_{ij}-1)\log(e^{-\sigma (s_{i} - s_{j})}) + y\log(1 + e^{-\sigma (s_{i} - s_{j})})$$
+\begin{align}
+\text{logloss}\_{ij} = (y_{ij}-1)\log(e^{-\sigma (s_{i} - s_{j})}) + y_{ij}\log(1 + e^{-\sigma (s_{i} - s_{j})})
+\end{align}
 
 In the literature on pairwise loss for ranking, right here there is usually a slight of hand: $y_{ij} = 1$. The same information from ordering the items $(i, j) \rightarrow y=1$ can be gleaned from ordering the items $(j, i) \rightarrow y=0$. Training on tied pairs would not help the model to discern between relevant and irrelevant items. All we really need to keep are the instances of $y_{ij}=1$. Therefore, pairwise log-loss can be simplified:
 
-$$\text{logloss}_{ij} = \log(1 + e^{-\sigma (s_{i} - s_{j})})$$
+\begin{align}
+\text{logloss}\_{ij} = \log(1 + e^{-\sigma (s_{i} - s_{j})})
+\end{align}
 
 This loss is also known as "pairwise logistic loss," "pairwise loss," and "RankNet" loss (after the siamese neural network used for pairwise ranking first proposed in [[2]](#2)).
 
@@ -77,23 +79,19 @@ It's not too difficult to understand: when $Y_{i} > Y_{j}$, the model will achie
 ## LightGBM implements gradient boosting with the lambdarank gradient
 LightGBM is a machine learning library for gradient boosting. The core idea behind gradient boosting is that if you can take the first and second derivatives of a loss function you're seeking to minimize (or an objective function you're seeking to maximize), then LightGBM can find a solution for you using gradient boosted decision trees (GBDTs). Gradient boosting is more or less a functional version of [Newton's method](https://en.wikipedia.org/wiki/Newton%27s_method_in_optimization), which is why we need the gradient and hessian. During training it builds a sequence of decision trees each fit to the gradient of the loss function when the model is evaluated on the data at the current boosting iteration.
 
-$$
 \begin{align}
-\frac{\partial \text{logloss}_{ij}}{\partial s_{i}} &= \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{i} - s_{j})}} \\
-&= \frac{-\sigma}{1 + e^{\sigma(s_{i} - s_{j})}} \hspace{10mm} (\text{having multiplied by} \hspace{1mm} \frac{e^{\sigma(s_{i} - s_{j})}}{e^{\sigma(s_{i} - s_{j})}}) \\
+\frac{\partial \text{logloss}\_{ij}}{\partial s_{i}} &= \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{i} - s_{j})}} \\\
+&= \frac{-\sigma}{1 + e^{\sigma(s_{i} - s_{j})}} \hspace{10mm} (\text{having multiplied by} \hspace{1mm} \frac{e^{\sigma(s_{i} - s_{j})}}{e^{\sigma(s_{i} - s_{j})}}) \\\
 &= \lambda_{ij}
 \end{align}
-$$
 
 *This* is where the "lambda" in `lambdarank` comes from.
 
 Note a critical shortcoming of the $\lambda_{ij}$ gradients - **they are completely positionally unaware**. The formulation of the pairwise loss that we've used to derive the $\lambda_{ij}$ treats the loss the same whether we've incorrectly sorted two items near the top of the query or near the bottom of the query. For example, it would assign the same loss and gradient to the pairs $(1, 3)$ and $(100, 101)$ when $s_{i} - s_{j}$ and $Y_{i}$ and $Y_{j}$ are the same. But most eCommerce or Google/Bing users spend like 90% of their time near the top of the query, so it's much more important to optimze the items appearing within the first few positions. A possible correction proposed by Burges in 2006 [[4]](#4) was to just scale $\lambda_{ij}$ by the change in NDCG (a positionally-aware ranking metric) that would be incurred if the incorrect pairwise sorting of items $(i, j)$ was used:
 
-$$
-\begin{equation}
+\begin{align}
 \lambda_{ij} = \log(1 + e^{-\sigma (s_{i} - s_{j})})|\Delta NDCG_{ij}|
-\end{equation}
-$$
+\end{align}
 
 This is known as the **lambdarank gradient**. The claim is that by using this form of the gradient within a loss minimization procedure, we end up maximizing NDCG. Well, if this decision to scale the original $\lambda_{ij}$ by $\|\Delta NDCG_{ij}\|$ seems kind of arbitrary to you, you are not alone. Several researchers have taken issue with it, viewing it more as a hack than a true gradient of a real loss function [[7]](#7). Just know that the term `lambdarank` does not refer to a loss function (like some other LightGBM `objective` strings like `"mse"` or `"mape"`), but to an explicit gradient formulation.
 
@@ -101,29 +99,25 @@ Anyway, we have the positionally-aware "gradient" of the pairwise loss function 
 
 In order to just get the *gradient with respect to product i*, we have to accumulate the gradient across all pairs of products where $i$ is the more-relevant item, and symmetrically, across all pairs where $i$ is the less-relevant item. Let $I$ refer to the set of item pairs $(i, j)$ where the first item is more relevant than the second item.
 
-$$
 \begin{align}
-\lambda_{i} &= \sum_{j:\{i, j\} \in I}\lambda_{ij} - \sum_{j:\{j, i\} \in I}\lambda_{ij}
+\lambda_{i} = \sum_{j:\{i, j\} \in I}\lambda_{ij} - \sum_{j:\{j, i\} \in I}\lambda_{ij}
 \end{align}
-$$
 
 We need to take a quick detour. Confusingly, LightGBM (as well as XGBoost) are known as **gradient boosted** tree learning libraries. They actually implement *Newton boosting* [[3]](#3). Gradient boosting is premised on taking a **first**-order Taylor approximation of the loss function about the current estimates of the loss at each step of the tree-estimation process. But you can get better results by taking higher-order approximations to the loss function, and LightGBM uses a **second**-order approximation. In basic gradient boosting, during each boosting iteration we fit a new decision tree directly to $Y = g_{i}^{k}$, where $g_{i}^{k} = \lambda_{i}^{k}$, the gradient of the loss of the model on iteration $k$. But in Newton boosting, the regression involves both the hessian (designated $h_{i}^{k}$) and the gradient:
 
-$$
+
 \begin{align}
-\text{tree}_{k+1} = \arg\min\sum_{i=1}^{n}h_{i}^{k}\big(-\frac{g_{i}^{k}}{h_{i}^{k}} - \ell\ell_{i}^{k}\big)^{2}
+\text{tree}\_{k+1} = \arg\min\sum_{i=1}^{n}h_{i}^{k}\big(-\frac{g_{i}^{k}}{h_{i}^{k}} - \ell\ell_{i}^{k}\big)^{2}
 \end{align}
-$$
+
 
 That we're using the *lambda* gradient to learn a GBDT lead to  **LambdaMART** [[4]](#4). Ok, now lets take the second derivative of $\ell \ell$ by taking the derivative of $\lambda_{ij}$ by using the quotient rule:
 
-$$
 \begin{align}
-\frac{\partial^{2} \text{logloss}}{\partial s_{i}^{2}} &= \frac{\sigma^{2}e^{-\sigma(s_{j} - s_{i})}|\Delta NDCG_{ij}|}{(1 + e^{-\sigma(s_{j} - s_{i})})^{2}} \\
-&= \frac{-\sigma}{1 + e^{-\sigma(s_{j} - s_{i})}}|\Delta NDCG_{ij}| \cdot \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}} \\
+\frac{\partial^{2} \text{logloss}\_{ij}}{\partial s_{i}^{2}} &= \frac{\sigma^{2}e^{-\sigma(s_{j} - s_{i})}|\Delta NDCG_{ij}|}{(1 + e^{-\sigma(s_{j} - s_{i})})^{2}} \\\
+&= \frac{-\sigma}{1 + e^{-\sigma(s_{j} - s_{i})}}|\Delta NDCG_{ij}| \cdot \frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}} \\\
 &= \lambda_{ij}\frac{-\sigma e^{-\sigma(s_{j} - s_{i})}}{1 + e^{-\sigma(s_{j} - s_{i})}}
 \end{align}
-$$
 
 Ok, we're done with the math! Later on we'll map these components of the gradient and hessian to the actual C++ code used in LightGBM's actual lambdarank objective source code.
 
@@ -204,14 +198,12 @@ p_hessian *= sigmoid_ * sigmoid_ * delta_pair_NDCG;     // Finish hessian calcul
 
 Let's tie the code together with the math, as I had particularly struggled to understand why `p_hessian =  p_lambda *  (1 - p_lambda)` was valid:
 
-$$
-\begin{aligned}
-\text{p_lambda} &= \frac{1}{1 + e^{\sigma(s_{i} - s_{j})}} \\
-1 - \text{p_lambda} &= \frac{e^{\sigma(s_{i} - s_{j})}}{1 + e^{\sigma(s_{i} - s_{j})}} \\
-\text{p_lambda}(1 - \text{p_lambda}) &= \frac{e^{\sigma(s_{i} - s_{j})}}{(1 + e^{\sigma(s_{i} - s_{j})})^{2}} \\
+\begin{align}
+\text{p_lambda} &= \frac{1}{1 + e^{\sigma(s_{i} - s_{j})}} \\\
+1 - \text{p_lambda} &= \frac{e^{\sigma(s_{i} - s_{j})}}{1 + e^{\sigma(s_{i} - s_{j})}} \\\
+\text{p_lambda}(1 - \text{p_lambda}) &= \frac{e^{\sigma(s_{i} - s_{j})}}{(1 + e^{\sigma(s_{i} - s_{j})})^{2}} \\\
 \Rightarrow \frac{\partial^{2}\text{logloss}}{\partial s_{i}^{2}} &= \sigma^{2}|\Delta NDCG_{ij}|\text{p_lambda}(1 - \text{p_lambda})
-\end{aligned}
-$$
+\end{align}
 
 And that's just about it! There are some other tweaks that some LightGBM contributors have made, such as the option to "normalize" the gradients across different queries (controlled with the `lambdarank_norm` parameter), which helps prevent the case where one very long query with tons of irrelevant items gets an unfair "build-up" of gradient value relative to a shorter query.
 
